@@ -6,7 +6,6 @@ LimitedDailyIncome.salesLimit = {}
 
 LimitedDailyIncome.STANDARD_LIMIT = 500000
 LimitedDailyIncome.INCREASE_LIMIT_FACTOR = 250000
-LimitedDailyIncome.KEY_PATTERN = "farms.farm(%d).limitedDailyIncome"
 
 function LimitedDailyIncome:loadFromXMLFile(xmlFilename)
     if xmlFilename == nil then
@@ -22,16 +21,21 @@ function LimitedDailyIncome:loadFromXMLFile(xmlFilename)
 
     local i = 0
     while true do
-        local key = string.format(self.KEY_PATTERN, i)
-        local farmIdKey = string.format("farms.farm(%d)#farmId", i)
-
+        local key = string.format("farms.farm(%d)", i)
+        
 		if not hasXMLProperty(xmlFile, key) then
 			break
 		end
 
-        if not hasXMLProperty(xmlFile, farmIdKey) then
-            break
-        end
+        local farmId = getXMLInt(xmlFile, key .. "#farmId")
+
+        -- added tag of limitedDayIncome to key
+        key = key .. ".limitedDayIncome"
+        self.sales[farmId] = getXMLFloat(xmlFile, key .. ".sales")
+        self.salesLimit[farmId] = getXMLInt(xmlFile, key .. ".salesLimit")
+        self.wasPlayerOnline[farmId] = getXMLBool(xmlFile, key .. ".wasPlayerOnline")
+
+        i = i + 1
     end
 end
 
@@ -42,7 +46,7 @@ function LimitedDailyIncome:saveToXMLFile(xmlFilename)
 
     for _, farm in pairs(farms) do
         if farm.farmId ~= 0 then
-			local key = string.format(self.KEY_PATTERN, index)
+			local key = string.format("farms.farm(%d).limitedDayIncome", index)
             local farmId = farm.farmId
 
             setXMLFloat(xmlFile, key .. ".sales", self.sales[farmId])

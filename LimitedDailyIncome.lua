@@ -7,6 +7,27 @@ LimitedDailyIncome.salesLimit = {}
 LimitedDailyIncome.STANDARD_LIMIT = 500000
 LimitedDailyIncome.INCREASE_LIMIT_FACTOR = 250000
 
+
+
+function LimitedDailyIncome:saveToXMLFile(xmlFilename)
+    local xmlFile = loadXMLFile(xmlFilename)
+    local index = 0
+    local farms = g_farmManager:getFarms()
+
+    for _, farm in pairs(farms) do
+        if farm.farmId ~= 0 then
+			local key = string.format("farms.farm(%d).limitedDailyIncome", index)
+            local farmId = farm.farmId
+
+            setXMLFloat(xmlFile, key .. ".sales", self.sales[farmId])
+            setXMLInt(xmlFile, key .. ".salesLimit", self.salesLimit[farmId])
+            setXMLBool(xmlFile, key .. ".wasPlayerOnline", self.wasPlayerOnline[farmId])
+			
+			index = index + 1
+		end
+    end
+end
+
 -- daily reset to defaults
 function LimitedDailyIncome:onDayChanged()
     for farmId, _ in pairs(self.sales) do
@@ -20,6 +41,27 @@ function LimitedDailyIncome:onDayChanged()
 
         self.wasPlayerOnline[farmId] = false
     end
+end
+
+--register new farm with default values
+function LimitedDailyIncome:createFarm(superFunc, name, color, password, farmId)
+    local farm = superFunc(self, name, color, password, farmId)
+
+    if farm ~= nil then
+        farmId = farm.farmId
+        LimitedDailyIncome.sales[farmId] = 0
+        LimitedDailyIncome.wasPlayerOnline[farmId] = false
+        LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.STANDARD_LIMIT
+    end
+
+    return farm
+end
+
+--remove farm if deleted
+function LimitedDailyIncome:removeFarm(farmId)
+    self.sales[farmId] = nil
+    self.salesLimit[farmId] = nil
+    self.wasPlayerOnline[farmId] = nil
 end
 
 -- keep track of earned money to measure the total amount
@@ -53,13 +95,7 @@ function LimitedDailyIncome:applyChangesTrailer(superFunc)
         --must look deeper into it to decide which solution is better
     end
     
-    if LimitedDailyIncome.sales[farmId] >= LimitedDailyIncome.salesLimit[farmId] then
-        --TODO: Show error "you have earned to much money today. Please wait till the next day." on screen
-        self:checkTotalSum(self, farmId)
-        return
-    end
-
-    superFunc(self)
+    LimitedDailyIncome:checkTotalSum(self, superFunc, farmId)
 end
 
 -- disable making money with selling animals through selling at animalTrader and husbandaries
@@ -67,26 +103,29 @@ function LimitedDailyIncome:applyChangesFarms(superFunc)
     -- get vehicle the trailer is attached to
     local farmId = self.husbandry.ownerFarmId
     
-    if LimitedDailyIncome.sales[farmId] >= LimitedDailyIncome.salesLimit[farmId] then
-        --TODO: Show error "you have earned to much money today. Please wait till the next day." on screen
-        self:checkTotalSum(self, farmId)
+    LimitedDailyIncome:checkTotalSum(self, superFunc, farmId)
+end
+
+function LimitedDailyIncome:checkTotalSum(this, superFunc, farmId)
+    local _, _, _, total = this:getPrices()
+
+    if LimitedDailyIncome.sales[farmId] >= LimitedDailyIncome.salesLimit[farmId] and total > 0 then
+        --TODO: Show error "you have earned to much money today to make money with selling animals. Please wait till the next day." on screen
         return
     end
 
     superFunc(self)
 end
 
-function LimitedDailyIncome:checkTotalSum(this, farmId)
-    local _, _, _, total = this:getPrices()
-
-    if total > 0 then
-        --gaining money is not allowed because limit is fullfilled
-    end
-end
-
+--tracking money
 FSBaseMission.addMoney = Utils.prependedFunction(FSBaseMission.addMoney, LimitedDailyIncome.addMoney)
+--farms Management
+FarmManager.createFarm = Utils.overwrittenFunction(FarmManager.createFarm, LimitedDailyIncome.createFarm)
+FarmManager.removeFarm = Utils.appendedFunction(FarmManager.removeFarm, LimitedDailyIncome.removeFarm)
+-- permission mamaging
 MissionManager.startMission = Utils.overwrittenFunction(MissionManager.startMission, LimitedDailyIncome.startMission)
-
+DealerFarmStrategie.applyChanges = Utils.overwrittenFunction(DealerFarmStrategie.applyChanges, LimitedDailyIncome.applyChangesFarms)
+DealerTrailerStrategie.applyChanges = Utils.overwrittenFunction(DealerTrailerStrategie.applyChanges, LimitedDailyIncome.applyChangesTrailer)
 
 --TODO
 --g_currentMission:addUpdateable()

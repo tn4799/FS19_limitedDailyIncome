@@ -55,6 +55,7 @@ function LimitedDailyIncome:applyChangesTrailer(superFunc)
     
     if LimitedDailyIncome.sales[farmId] >= LimitedDailyIncome.salesLimit[farmId] then
         --TODO: Show error "you have earned to much money today. Please wait till the next day." on screen
+        self:checkTotalSum(self, farmId)
         return
     end
 
@@ -68,11 +69,19 @@ function LimitedDailyIncome:applyChangesFarms(superFunc)
     
     if LimitedDailyIncome.sales[farmId] >= LimitedDailyIncome.salesLimit[farmId] then
         --TODO: Show error "you have earned to much money today. Please wait till the next day." on screen
-        
+        self:checkTotalSum(self, farmId)
         return
     end
 
     superFunc(self)
+end
+
+function LimitedDailyIncome:checkTotalSum(this, farmId)
+    local _, _, _, total = this:getPrices()
+
+    if total > 0 then
+        --gaining money is not allowed because limit is fullfilled
+    end
 end
 
 FSBaseMission.addMoney = Utils.prependedFunction(FSBaseMission.addMoney, LimitedDailyIncome.addMoney)

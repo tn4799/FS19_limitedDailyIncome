@@ -6,17 +6,43 @@ LimitedDailyIncome.salesLimit = {}
 
 LimitedDailyIncome.STANDARD_LIMIT = 500000
 LimitedDailyIncome.INCREASE_LIMIT_FACTOR = 250000
+LimitedDailyIncome.KEY_PATTERN = "farms.farm(%d).limitedDailyIncome"
 
+function LimitedDailyIncome:loadFromXMLFile(xmlFilename)
+    if xmlFilename == nil then
+        --load default values
+        self.sales = {}
+        self.salesLimit = {}
+        self.wasPlayerOnline = {}
 
+        return
+    end
+
+    local xmlFile = loadXMLFile("farmsXML", xmlFilename)
+
+    local i = 0
+    while true do
+        local key = string.format(self.KEY_PATTERN, i)
+        local farmIdKey = string.format("farms.farm(%d)#farmId", i)
+
+		if not hasXMLProperty(xmlFile, key) then
+			break
+		end
+
+        if not hasXMLProperty(xmlFile, farmIdKey) then
+            break
+        end
+    end
+end
 
 function LimitedDailyIncome:saveToXMLFile(xmlFilename)
-    local xmlFile = loadXMLFile(xmlFilename)
+    local xmlFile = loadXMLFile("farmsXML", xmlFilename)
     local index = 0
     local farms = g_farmManager:getFarms()
 
     for _, farm in pairs(farms) do
         if farm.farmId ~= 0 then
-			local key = string.format("farms.farm(%d).limitedDailyIncome", index)
+			local key = string.format(self.KEY_PATTERN, index)
             local farmId = farm.farmId
 
             setXMLFloat(xmlFile, key .. ".sales", self.sales[farmId])

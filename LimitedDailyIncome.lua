@@ -1,16 +1,24 @@
 LimitedDailyIncome = {}
 
 LimitedDailyIncome.sales = {}
+LimitedDailyIncome.wasPlayerOnline = {}
 LimitedDailyIncome.salesLimit = {}
 
+-- Daily Limit
 LimitedDailyIncome.STANDARD_LIMIT = 450000
-LimitedDailyIncome.INCREASE_LIMIT_FACTOR = 250000
+-- Increase when player was not online.
+LimitedDailyIncome.INCREASE_LIMIT_OFFLINE = 250000
+-- Daily Limit that gets ignored.
+LimitedDailyIncome.IGNORE_INCOME_LIMIT = 30000
+-- Increase when player stays below the limit.
+LimitedDailyIncome.INCREASE_LIMIT_IGNORE = 50000
 
 function LimitedDailyIncome:loadFromXMLFile(xmlFilename)
     if xmlFilename == nil then
         --load default values
         self.sales = {}
         self.salesLimit = {}
+        self.wasPlayerOnline = {}
 
         return
     end
@@ -31,6 +39,7 @@ function LimitedDailyIncome:loadFromXMLFile(xmlFilename)
         key = key .. ".limitedDayIncome"
         self.sales[farmId] = getXMLFloat(xmlFile, key .. ".sales")
         self.salesLimit[farmId] = getXMLInt(xmlFile, key .. ".salesLimit")
+        self.wasPlayerOnline[farmId] = getXMLBool(xmlFile, key .. ".wasPlayerOnline")
 
         i = i + 1
     end
@@ -48,6 +57,7 @@ function LimitedDailyIncome:saveToXMLFile(xmlFilename)
 
             setXMLFloat(xmlFile, key .. ".sales", self.sales[farmId])
             setXMLInt(xmlFile, key .. ".salesLimit", self.salesLimit[farmId])
+            setXMLBool(xmlFile, key .. ".wasPlayerOnline", self.wasPlayerOnline[farmId])
 			
 			index = index + 1
 		end
@@ -59,11 +69,15 @@ function LimitedDailyIncome:onDayChanged()
     for farmId, _ in pairs(self.sales) do
         self.sales[farmId] = 0
 
-        if not self.sales[farmId] <= 50.000 then
-            self.salesLimit[farmId] = self.salesLimit[farmId] + self.INCREASE_LIMIT_FACTOR
+        if not self.wasPlayerOnline[farmId] then
+            self.salesLimit[farmId] = self.salesLimit[farmId] + self.INCREASE_LIMIT_OFFLINE
+        else if self.sales <= LimitedDailyIncome.IGNORE_INCOME_LIMIT then
+            self.salesLimit[farmId] = self.salesLimit[farmId] + self.INCREASE_LIMIT_IGNORE
         else
             self.salesLimit[farmId] = self.STANDARD_LIMIT
         end
+
+        self.wasPlayerOnline[farmId] = false
     end
 end
 
@@ -74,6 +88,7 @@ function LimitedDailyIncome:createFarm(superFunc, name, color, password, farmId)
     if farm ~= nil then
         farmId = farm.farmId
         LimitedDailyIncome.sales[farmId] = 0
+        LimitedDailyIncome.wasPlayerOnline[farmId] = false
         LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.STANDARD_LIMIT
     end
 
@@ -84,6 +99,7 @@ end
 function LimitedDailyIncome:removeFarm(farmId)
     self.sales[farmId] = nil
     self.salesLimit[farmId] = nil
+    self.wasPlayerOnline[farmId] = nil
 end
 
 -- keep track of earned money to measure the total amount

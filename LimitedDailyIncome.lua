@@ -156,6 +156,15 @@ function LimitedDailyIncome:addFillLevelFromTool(superFunc, farmId, deltaFillLev
     superFunc(self, farmId, deltaFillLevel, fillLevel, fillInfo, toolType)
 end
 
+function LimitedDailyIncome:sellWood(superFunc, farmId)
+    if LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
+        --TODO: show error message
+        return
+    end
+
+    superFunc(self, farmId)
+end
+
 --tracking money
 FSBaseMission.addMoney = Utils.prependedFunction(FSBaseMission.addMoney, LimitedDailyIncome.addMoney)
 --farms Management

@@ -5,7 +5,7 @@ LimitedDailyIncome.wasPlayerOnline = {}
 LimitedDailyIncome.salesLimit = {}
 
 -- Daily Limit
-LimitedDailyIncome.STANDARD_LIMIT = 450000
+LimitedDailyIncome.STANDARD_LIMIT = 500000
 -- Increase when player was not online.
 LimitedDailyIncome.INCREASE_LIMIT_OFFLINE = 250000
 -- Daily Limit that gets ignored.

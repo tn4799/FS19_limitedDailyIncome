@@ -4,8 +4,14 @@ LimitedDailyIncome.sales = {}
 LimitedDailyIncome.wasPlayerOnline = {}
 LimitedDailyIncome.salesLimit = {}
 
+-- Daily Limit
 LimitedDailyIncome.STANDARD_LIMIT = 500000
-LimitedDailyIncome.INCREASE_LIMIT_FACTOR = 250000
+-- Increase when player was not online.
+LimitedDailyIncome.INCREASE_LIMIT_OFFLINE = 250000
+-- Daily Limit that gets ignored.
+LimitedDailyIncome.IGNORE_INCOME_LIMIT = 30000
+-- Increase when player stays below the limit.
+LimitedDailyIncome.INCREASE_LIMIT_IGNORE = 50000
 
 function LimitedDailyIncome:loadFromXMLFile(xmlFilename)
     if xmlFilename == nil then
@@ -64,7 +70,9 @@ function LimitedDailyIncome:onDayChanged()
         self.sales[farmId] = 0
 
         if not self.wasPlayerOnline[farmId] then
-            self.salesLimit[farmId] = self.salesLimit[farmId] + self.INCREASE_LIMIT_FACTOR
+            self.salesLimit[farmId] = self.salesLimit[farmId] + self.INCREASE_LIMIT_OFFLINE
+        else if self.sales <= LimitedDailyIncome.IGNORE_INCOME_LIMIT then
+            self.salesLimit[farmId] = self.salesLimit[farmId] + self.INCREASE_LIMIT_IGNORE
         else
             self.salesLimit[farmId] = self.STANDARD_LIMIT
         end

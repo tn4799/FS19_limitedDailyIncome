@@ -71,7 +71,7 @@ function LimitedDailyIncome:onDayChanged()
 
         if not self.wasPlayerOnline[farmId] then
             self.salesLimit[farmId] = self.salesLimit[farmId] + self.INCREASE_LIMIT_OFFLINE
-        else if self.sales <= LimitedDailyIncome.IGNORE_INCOME_LIMIT then
+        elseif self.sales <= LimitedDailyIncome.IGNORE_INCOME_LIMIT then
             self.salesLimit[farmId] = self.salesLimit[farmId] + self.INCREASE_LIMIT_IGNORE
         else
             self.salesLimit[farmId] = self.STANDARD_LIMIT

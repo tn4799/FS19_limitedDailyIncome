@@ -135,6 +135,13 @@ function LimitedDailyIncome:removeFarm(farmId)
     self.sales[farmId] = nil
     self.salesLimit[farmId] = nil
     self.wasPlayerOnline[farmId] = nil
+
+    -- remove all assigned players from deleted farm
+    for uniqueUserId, farmId2 in pairs(self.uniqueUserIdToAssignedFarm) do
+        if farmId2 == farmId2 then
+            self.uniqueUserIdToAssignedFarm[uniqueUserId] = nil
+        end
+    end
 end
 
 -- keep track of earned money to measure the total amount

@@ -3,6 +3,7 @@ LimitedDailyIncome = {}
 LimitedDailyIncome.sales = {}
 LimitedDailyIncome.wasPlayerOnline = {}
 LimitedDailyIncome.salesLimit = {}
+LimitedDailyIncome.uniqueUserIdToAssignedFarm = {}
 
 -- Daily Limit
 LimitedDailyIncome.STANDARD_LIMIT = 500000
@@ -62,6 +63,40 @@ function LimitedDailyIncome:saveToXMLFile(xmlFilename)
 			index = index + 1
 		end
     end
+end
+
+-- this function is called when a player joins the game and he already was in a farm the last time he played
+-- NOTE: he always is in a farm, but we ignore the Spectator Farm (farmId = 0)
+function LimitedDailyIncome:onUserJoinGame(uniqueUserId, userId, user)
+    local farm = g_farmManager:getFarmForUniqueUserId(uniqueUserId)
+    local farmId = farm.farmId
+
+    if farmId ~= g_farmManager.SPECTATOR_FARM_ID then
+        self.wasPlayerOnline[farmId] = self:checkIfUserIsAssignedToFarm(farmId, uniqueUserId)
+    end
+end
+
+-- this is called when a player joins a farm by himself
+-- The first time a player joins a farm, he is assigned to that farm.
+-- NOTE: we need overwrittenFunction here because we need to access the farmId of the farm of which addUser is called.
+-- this is only possible with self, and to get that self = Farm we need to overwrite the original function
+function LimitedDailyIncome:addUser(superFunc, userId, uniqueUserId, isFarmManager, user)
+    -- first let the original function do its work, then do our own
+    superFunc(self, userId, uniqueUserId, isFarmManager, user)
+
+    local spectator_farm = g_farmManager.SPECTATOR_FARM_ID
+    -- assign new user to first farm he joins
+    if LimitedDailyIncome.uniqueUserIdToAssignedFarm[uniqueUserId] == nil and self.farmId ~= spectator_farm then
+        LimitedDailyIncome.uniqueUserIdToAssignedFarm[uniqueUserId] = self.farmId
+        return
+    end
+
+    -- check if user that joined the farm is assigned to the farm and if so there was a player online
+    self.wasPlayerOnline[self.farmId] = LimitedDailyIncome:checkIfUserIsAssignedToFarm(self.farmId, uniqueUserId)
+end
+
+function LimitedDailyIncome:checkIfUserIsAssignedToFarm(farmId, uniqueUserId)
+    return farmId == self.uniqueUserIdToAssignedFarm[uniqueUserId]
 end
 
 -- daily reset to defaults
@@ -178,6 +213,16 @@ FSBaseMission.addMoney = Utils.prependedFunction(FSBaseMission.addMoney, Limited
 --farms Management
 FarmManager.createFarm = Utils.overwrittenFunction(FarmManager.createFarm, LimitedDailyIncome.createFarm)
 FarmManager.removeFarm = Utils.appendedFunction(FarmManager.removeFarm, LimitedDailyIncome.removeFarm)
+-- player management
+Farm.addUser = Utils.overwrittenFunction(Farm.addUser, LimitedDailyIncome.addUser)
+-- need own append-function because we need to keep the return value of the original function
+Farm.onUserJoinGame = function (...)
+    --oldFunc
+    local returnValue = Farm.onUserJoinGame(...)
+    --newFunc
+    LimitedDailyIncome.onUserJoinGame(...)
+    return returnValue
+end
 -- permission managing
 -- overwritten is used because we do some code injection. This means we insert some code at the start of the original function
 MissionManager.startMission = Utils.overwrittenFunction(MissionManager.startMission, LimitedDailyIncome.startMission)

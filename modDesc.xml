@@ -17,7 +17,7 @@ Bla
     <iconFilename>modIcon.dds</iconFilename>
     <multiplayer supported="true"/>
     <extraSourceFiles>
-        <sourceFile filename="src/limitedDailyIncome.lua"/>
+        <sourceFile filename="src/LimitedDailyIncome.lua"/>
     </extraSourceFiles>
 
     <!--l10 filenamePrefix="translations/l10n"/-->

@@ -4,6 +4,14 @@ LimitedDailyIncome.sales = {}
 LimitedDailyIncome.wasPlayerOnline = {}
 LimitedDailyIncome.salesLimit = {}
 LimitedDailyIncome.uniqueUserIdToAssignedFarm = {}
+LimitedDailyIncome.allowedMoneyTypes = {
+    MoneyType.SHOP_VEHICLE_SELL,
+    MoneyType.SHOP_PROPERTY_SELL,
+    MoneyType.FIELD_SELL,
+    MoneyType.PROPERTY_INCOME,
+    MoneyType.INCOME_BGA,
+    MoneyType.TRANSFER
+}
 
 -- Daily Limit
 LimitedDailyIncome.STANDARD_LIMIT = 500000
@@ -178,9 +186,18 @@ end
 
 -- keep track of earned money to measure the total amount
 function LimitedDailyIncome:addMoney(amount, farmId, moneyType, addChange, forceShowChange)
-    if amount > 0 and not moneytype == MoneyType.SHOP_VEHICLE_SELL then
+    if amount > 0 and self.isMoneyTypeAllowed(moneyType) then
         LimitedDailyIncome.sales[farmId] = LimitedDailyIncome.sales[farmId] + amount
     end
+end
+
+function LimitedDailyIncome:isMoneyTypeAllowed(moneyType)
+    for _, type in pairs(self.allowedMoneyTypes) do
+        if moneyType == type then
+            return true
+        end
+    end
+    return false
 end
 
 -- disable mission activation if sales limit is passed
@@ -235,7 +252,7 @@ function LimitedDailyIncome:addFillLevelFromTool(superFunc, farmId, deltaFillLev
         return
     end
 
-    superFunc(self, farmId, deltaFillLevel, fillLevel, fillInfo, toolType)
+    superFunc(self, farmId, deltaFillLevel, fillType, fillInfo, toolType)
 end
 
 function LimitedDailyIncome:sellWood(superFunc, farmId)
@@ -271,5 +288,5 @@ DealerFarmStrategie.applyChanges = Utils.overwrittenFunction(DealerFarmStrategie
 DealerTrailerStrategie.applyChanges = Utils.overwrittenFunction(DealerTrailerStrategie.applyChanges, LimitedDailyIncome.applyChangesTrailer)
 SellingStation.addFillLevelFromTool = Utils.overwrittenFunction(SellingStation.addFillLevelFromTool, LimitedDailyIncome.addFillLevelFromTool)
 WoodSellStationPlaceable.sellWood = Utils.overwrittenFunction(WoodSellStationPlaceable.sellWood, LimitedDailyIncome.sellWood)
---TODO
---g_currentMission.environment:addDayChangedListener
+
+g_currentMission.environment:addDayChangedListener(LimitedDailyIncome)

@@ -52,7 +52,7 @@ function LimitedDailyIncome:saveToXMLFile(xmlFilename)
     local farms = g_farmManager:getFarms()
 
     for _, farm in pairs(farms) do
-        if farm.farmId ~= 0 then
+        if farm.farmId ~= g_farmManager.SPECTATOR_FARM_ID then
 			local key = string.format("farms.farm(%d).limitedDayIncome", index)
             local farmId = farm.farmId
 
@@ -215,6 +215,8 @@ function LimitedDailyIncome:sellWood(superFunc, farmId)
     superFunc(self, farmId)
 end
 
+FarmManager.saveToXMLFile = Utils.appendedFunction(FarmManager.saveToXMLFile, LimitedDailyIncome.saveToXMLFile)
+FarmManager.loadFromXMLFile = Utils.appendedFunction(FarmManager.saveToXMLFile, LimitedDailyIncome.loadFromXMLFile)
 --tracking money
 FSBaseMission.addMoney = Utils.prependedFunction(FSBaseMission.addMoney, LimitedDailyIncome.addMoney)
 --farms Management

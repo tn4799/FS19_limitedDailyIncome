@@ -14,7 +14,7 @@ Bla
 ]]>
         </en>
     </description>
-    <modIcon>modIcon.dds</modIcon>
+    <iconFilename>modIcon.dds</iconFilename>
     <multiplayer supported="true"/>
     <extraSourceFiles>
         <sourceFile filename="src/limitedDailyIncome.lua"/>

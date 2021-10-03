@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<modDesc descVersion="53">
+    <author>tn4799, Tensuko</author>
+    <version>1.0.0.0</version>
+    <title>
+        <en>Limited Daily Income</en>
+        <de>Begrenztes Tägliches Einkommen</de>
+    </title>
+
+    <description>
+        <en>
+<![CDATA[
+Bla
+]]>
+        </en>
+    </description>
+    <modIcon>modIcon.dds</modIcon>
+    <multiplayer supported="true"/>
+    <extraSourceFiles>
+        <sourceFile filename="src/limitedDailyIncome.lua"/>
+    </extraSourceFiles>
+
+    <!--l10 filenamePrefix="translations/l10n"/-->
+</modDesc>

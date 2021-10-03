@@ -20,6 +20,7 @@ function LimitedDailyIncome:loadFromXMLFile(xmlFilename)
         self.sales = {}
         self.salesLimit = {}
         self.wasPlayerOnline = {}
+        self.uniqueUserIdToAssignedFarm = {}
 
         return
     end
@@ -29,7 +30,7 @@ function LimitedDailyIncome:loadFromXMLFile(xmlFilename)
     local i = 0
     while true do
         local key = string.format("farms.farm(%d)", i)
-        
+
 		if not hasXMLProperty(xmlFile, key) then
 			break
 		end
@@ -44,6 +45,23 @@ function LimitedDailyIncome:loadFromXMLFile(xmlFilename)
 
         i = i + 1
     end
+
+    i = 0
+
+    while true do
+        local key = string.format("assignedPlayers.assignedPlayer(%d)", i)
+
+        if not hasXMLProperty(xmlFile, key) then
+			break
+		end
+
+        local uniqueUserId = getXMLString(xmlFile, key .. "#uniqueUserId")
+        self.uniqueUserIdToAssignedFarm[uniqueUserId] = getXMLInt(xmlFile, key .. "#farmId")
+
+        i = i + 1
+    end
+
+    delete(xmlFile)
 end
 
 function LimitedDailyIncome:saveToXMLFile(xmlFilename)
@@ -59,10 +77,24 @@ function LimitedDailyIncome:saveToXMLFile(xmlFilename)
             setXMLFloat(xmlFile, key .. ".sales", self.sales[farmId])
             setXMLInt(xmlFile, key .. ".salesLimit", self.salesLimit[farmId])
             setXMLBool(xmlFile, key .. ".wasPlayerOnline", self.wasPlayerOnline[farmId])
-			
+
 			index = index + 1
 		end
     end
+
+    index = 0
+
+    for uniqueUserId, farmId in pairs(uniqueUserIdToAssignedFarm) do
+        local key = string.format("assignedPlayers.assignedPlayer(%d)", index)
+
+        setXMLString(xmlFile, key .. "#uniqueUserId", uniqueUserId)
+        setXMLInt(xmlFile, key .. "#farmId", farmId)
+
+        index = index + 1
+    end
+
+    saveXMLFile(xmlFile)
+	delete(xmlFile)
 end
 
 -- this function is called when a player joins the game and he already was in a farm the last time he played
@@ -240,4 +272,4 @@ DealerTrailerStrategie.applyChanges = Utils.overwrittenFunction(DealerTrailerStr
 SellingStation.addFillLevelFromTool = Utils.overwrittenFunction(SellingStation.addFillLevelFromTool, LimitedDailyIncome.addFillLevelFromTool)
 WoodSellStationPlaceable.sellWood = Utils.overwrittenFunction(WoodSellStationPlaceable.sellWood, LimitedDailyIncome.sellWood)
 --TODO
---g_currentMission:addUpdateable()
+--g_currentMission.environment:addDayChangedListener

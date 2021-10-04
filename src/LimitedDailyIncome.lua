@@ -22,13 +22,17 @@ LimitedDailyIncome.IGNORE_INCOME_LIMIT = 30000
 -- Increase when player stays below the limit.
 LimitedDailyIncome.INCREASE_LIMIT_IGNORE = 50000
 
+function LimitedDailyIncome:loadMapFinished(node, arguments, callAsyncCallback)
+    g_currentMission.environment:addDayChangeListener(LimitedDailyIncome)
+end
+
 function LimitedDailyIncome:loadFromXMLFile(xmlFilename)
     if xmlFilename == nil then
         --load default values
-        self.sales = {}
-        self.salesLimit = {}
-        self.wasPlayerOnline = {}
-        self.uniqueUserIdToAssignedFarm = {}
+        LimitedDailyIncome.sales = {}
+        LimitedDailyIncome.salesLimit = {}
+        LimitedDailyIncome.wasPlayerOnline = {}
+        LimitedDailyIncome.uniqueUserIdToAssignedFarm = {}
 
         return
     end
@@ -47,9 +51,9 @@ function LimitedDailyIncome:loadFromXMLFile(xmlFilename)
 
         -- added tag of limitedDayIncome to key
         key = key .. ".limitedDayIncome"
-        self.sales[farmId] = getXMLFloat(xmlFile, key .. ".sales")
-        self.salesLimit[farmId] = getXMLInt(xmlFile, key .. ".salesLimit")
-        self.wasPlayerOnline[farmId] = getXMLBool(xmlFile, key .. ".wasPlayerOnline")
+        LimitedDailyIncome.sales[farmId] = Utils.getNoNil(getXMLFloat(xmlFile, key .. ".sales"), 0)
+        LimitedDailyIncome.salesLimit[farmId] = Utils.getNoNil(getXMLInt(xmlFile, key .. ".salesLimit"), LimitedDailyIncome.STANDARD_LIMIT)
+        LimitedDailyIncome.wasPlayerOnline[farmId] = Utils.getNoNil(getXMLBool(xmlFile, key .. ".wasPlayerOnline"), false)
 
         i = i + 1
     end
@@ -64,7 +68,7 @@ function LimitedDailyIncome:loadFromXMLFile(xmlFilename)
 		end
 
         local uniqueUserId = getXMLString(xmlFile, key .. "#uniqueUserId")
-        self.uniqueUserIdToAssignedFarm[uniqueUserId] = getXMLInt(xmlFile, key .. "#farmId")
+        LimitedDailyIncome.uniqueUserIdToAssignedFarm[uniqueUserId] = getXMLInt(xmlFile, key .. "#farmId")
 
         i = i + 1
     end
@@ -82,9 +86,9 @@ function LimitedDailyIncome:saveToXMLFile(xmlFilename)
 			local key = string.format("farms.farm(%d).limitedDayIncome", index)
             local farmId = farm.farmId
 
-            setXMLFloat(xmlFile, key .. ".sales", self.sales[farmId])
-            setXMLInt(xmlFile, key .. ".salesLimit", self.salesLimit[farmId])
-            setXMLBool(xmlFile, key .. ".wasPlayerOnline", self.wasPlayerOnline[farmId])
+            setXMLFloat(xmlFile, key .. ".sales", LimitedDailyIncome.sales[farmId])
+            setXMLInt(xmlFile, key .. ".salesLimit", LimitedDailyIncome.salesLimit[farmId])
+            setXMLBool(xmlFile, key .. ".wasPlayerOnline", LimitedDailyIncome.wasPlayerOnline[farmId])
 
 			index = index + 1
 		end
@@ -92,7 +96,7 @@ function LimitedDailyIncome:saveToXMLFile(xmlFilename)
 
     index = 0
 
-    for uniqueUserId, farmId in pairs(uniqueUserIdToAssignedFarm) do
+    for uniqueUserId, farmId in pairs(LimitedDailyIncome.uniqueUserIdToAssignedFarm) do
         local key = string.format("assignedPlayers.assignedPlayer(%d)", index)
 
         setXMLString(xmlFile, key .. "#uniqueUserId", uniqueUserId)
@@ -107,13 +111,15 @@ end
 
 -- this function is called when a player joins the game and he already was in a farm the last time he played
 -- NOTE: he always is in a farm, but we ignore the Spectator Farm (farmId = 0)
-function LimitedDailyIncome:onUserJoinGame(uniqueUserId, userId, user)
+function LimitedDailyIncome:onUserJoinGame(superFunc, uniqueUserId, userId, user)
     local farm = g_farmManager:getFarmForUniqueUserId(uniqueUserId)
     local farmId = farm.farmId
-
+    
     if farmId ~= g_farmManager.SPECTATOR_FARM_ID then
-        self.wasPlayerOnline[farmId] = self:checkIfUserIsAssignedToFarm(farmId, uniqueUserId)
+        LimitedDailyIncome.wasPlayerOnline[farmId] = LimitedDailyIncome:checkIfUserIsAssignedToFarm(farmId, uniqueUserId)
     end
+
+    return superFunc(self, uniqueUserId, userId, user)
 end
 
 -- this is called when a player joins a farm by himself
@@ -123,7 +129,7 @@ end
 function LimitedDailyIncome:addUser(superFunc, userId, uniqueUserId, isFarmManager, user)
     -- first let the original function do its work, then do our own
     superFunc(self, userId, uniqueUserId, isFarmManager, user)
-
+    
     local spectator_farm = g_farmManager.SPECTATOR_FARM_ID
     -- assign new user to first farm he joins
     if LimitedDailyIncome.uniqueUserIdToAssignedFarm[uniqueUserId] == nil and self.farmId ~= spectator_farm then
@@ -136,23 +142,23 @@ function LimitedDailyIncome:addUser(superFunc, userId, uniqueUserId, isFarmManag
 end
 
 function LimitedDailyIncome:checkIfUserIsAssignedToFarm(farmId, uniqueUserId)
-    return farmId == self.uniqueUserIdToAssignedFarm[uniqueUserId]
+    return farmId == LimitedDailyIncome.uniqueUserIdToAssignedFarm[uniqueUserId]
 end
 
 -- daily reset to defaults
 function LimitedDailyIncome:onDayChanged()
-    for farmId, _ in pairs(self.sales) do
-        self.sales[farmId] = 0
+    for farmId, _ in pairs(LimitedDailyIncome.sales) do
+        LimitedDailyIncome.sales[farmId] = 0
 
-        if not self.wasPlayerOnline[farmId] then
-            self.salesLimit[farmId] = self.salesLimit[farmId] + self.INCREASE_LIMIT_OFFLINE
-        elseif self.sales <= LimitedDailyIncome.IGNORE_INCOME_LIMIT then
-            self.salesLimit[farmId] = self.salesLimit[farmId] + self.INCREASE_LIMIT_IGNORE
+        if not LimitedDailyIncome.wasPlayerOnline[farmId] then
+            LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.salesLimit[farmId] + LimitedDailyIncome.INCREASE_LIMIT_OFFLINE
+        elseif LimitedDailyIncome.sales <= LimitedDailyIncome.IGNORE_INCOME_LIMIT then
+            LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.salesLimit[farmId] + LimitedDailyIncome.INCREASE_LIMIT_IGNORE
         else
-            self.salesLimit[farmId] = self.STANDARD_LIMIT
+            LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.STANDARD_LIMIT
         end
 
-        self.wasPlayerOnline[farmId] = false
+        LimitedDailyIncome.wasPlayerOnline[farmId] = false
     end
 end
 
@@ -172,27 +178,27 @@ end
 
 --remove farm if deleted
 function LimitedDailyIncome:removeFarm(farmId)
-    self.sales[farmId] = nil
-    self.salesLimit[farmId] = nil
-    self.wasPlayerOnline[farmId] = nil
+    LimitedDailyIncome.sales[farmId] = nil
+    LimitedDailyIncome.salesLimit[farmId] = nil
+    LimitedDailyIncome.wasPlayerOnline[farmId] = nil
 
     -- remove all assigned players from deleted farm
-    for uniqueUserId, farmId2 in pairs(self.uniqueUserIdToAssignedFarm) do
+    for uniqueUserId, farmId2 in pairs(LimitedDailyIncome.uniqueUserIdToAssignedFarm) do
         if farmId2 == farmId2 then
-            self.uniqueUserIdToAssignedFarm[uniqueUserId] = nil
+            LimitedDailyIncome.uniqueUserIdToAssignedFarm[uniqueUserId] = nil
         end
     end
 end
 
 -- keep track of earned money to measure the total amount
 function LimitedDailyIncome:addMoney(amount, farmId, moneyType, addChange, forceShowChange)
-    if amount > 0 and self.isMoneyTypeAllowed(moneyType) then
+    if amount > 0 and not LimitedDailyIncome:isMoneyTypeAllowed(moneyType) then
         LimitedDailyIncome.sales[farmId] = LimitedDailyIncome.sales[farmId] + amount
     end
 end
 
 function LimitedDailyIncome:isMoneyTypeAllowed(moneyType)
-    for _, type in pairs(self.allowedMoneyTypes) do
+    for _, type in pairs(LimitedDailyIncome.allowedMoneyTypes) do
         if moneyType == type then
             return true
         end
@@ -249,10 +255,10 @@ end
 function LimitedDailyIncome:addFillLevelFromTool(superFunc, farmId, deltaFillLevel, fillType, fillInfo, toolType)
     if LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
         --TODO: show error message
-        return
+        return 0
     end
 
-    superFunc(self, farmId, deltaFillLevel, fillType, fillInfo, toolType)
+    return superFunc(self, farmId, deltaFillLevel, fillType, fillInfo, toolType)
 end
 
 function LimitedDailyIncome:sellWood(superFunc, farmId)
@@ -264,8 +270,8 @@ function LimitedDailyIncome:sellWood(superFunc, farmId)
     superFunc(self, farmId)
 end
 
-FarmManager.saveToXMLFile = Utils.appendedFunction(FarmManager.saveToXMLFile, LimitedDailyIncome.saveToXMLFile)
-FarmManager.loadFromXMLFile = Utils.appendedFunction(FarmManager.saveToXMLFile, LimitedDailyIncome.loadFromXMLFile)
+FarmManager.saveToXMLFile = Utils.prependedFunction(FarmManager.saveToXMLFile, LimitedDailyIncome.saveToXMLFile)
+FarmManager.loadFromXMLFile = Utils.appendedFunction(FarmManager.loadFromXMLFile, LimitedDailyIncome.loadFromXMLFile)
 --tracking money
 FSBaseMission.addMoney = Utils.prependedFunction(FSBaseMission.addMoney, LimitedDailyIncome.addMoney)
 --farms Management
@@ -273,14 +279,7 @@ FarmManager.createFarm = Utils.overwrittenFunction(FarmManager.createFarm, Limit
 FarmManager.removeFarm = Utils.appendedFunction(FarmManager.removeFarm, LimitedDailyIncome.removeFarm)
 -- player management
 Farm.addUser = Utils.overwrittenFunction(Farm.addUser, LimitedDailyIncome.addUser)
--- need own append-function because we need to keep the return value of the original function
-Farm.onUserJoinGame = function (...)
-    --oldFunc
-    local returnValue = Farm.onUserJoinGame(...)
-    --newFunc
-    LimitedDailyIncome.onUserJoinGame(...)
-    return returnValue
-end
+Farm.onUserJoinGame = Utils.overwrittenFunction(Farm.onUserJoinGame, LimitedDailyIncome.onUserJoinGame) --overwritten is used to keep the return value
 -- permission managing
 -- overwritten is used because we do some code injection. This means we insert some code at the start of the original function
 MissionManager.startMission = Utils.overwrittenFunction(MissionManager.startMission, LimitedDailyIncome.startMission)
@@ -289,4 +288,4 @@ DealerTrailerStrategie.applyChanges = Utils.overwrittenFunction(DealerTrailerStr
 SellingStation.addFillLevelFromTool = Utils.overwrittenFunction(SellingStation.addFillLevelFromTool, LimitedDailyIncome.addFillLevelFromTool)
 WoodSellStationPlaceable.sellWood = Utils.overwrittenFunction(WoodSellStationPlaceable.sellWood, LimitedDailyIncome.sellWood)
 
-g_currentMission.environment:addDayChangedListener(LimitedDailyIncome)
+BaseMission.loadMapFinished = Utils.appendedFunction(BaseMission.loadMapFinished, LimitedDailyIncome.loadMapFinished)

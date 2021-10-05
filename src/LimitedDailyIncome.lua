@@ -29,10 +29,10 @@ end
 function LimitedDailyIncome:loadFromXMLFile(xmlFilename)
     if xmlFilename == nil then
         --load default values
-        LimitedDailyIncome.sales = {}
-        LimitedDailyIncome.salesLimit = {}
-        LimitedDailyIncome.wasPlayerOnline = {}
-        LimitedDailyIncome.uniqueUserIdToAssignedFarm = {}
+        self.sales = {}
+        self.salesLimit = {}
+        self.wasPlayerOnline = {}
+        self.uniqueUserIdToAssignedFarm = {}
 
         return
     end
@@ -61,7 +61,7 @@ function LimitedDailyIncome:loadFromXMLFile(xmlFilename)
     i = 0
 
     while true do
-        local key = string.format("assignedPlayers.assignedPlayer(%d)", i)
+        local key = string.format("farms.assignedPlayers.assignedPlayer(%d)", i)
 
         if not hasXMLProperty(xmlFile, key) then
 			break
@@ -97,12 +97,13 @@ function LimitedDailyIncome:saveToXMLFile(xmlFilename)
     index = 0
 
     for uniqueUserId, farmId in pairs(LimitedDailyIncome.uniqueUserIdToAssignedFarm) do
-        local key = string.format("assignedPlayers.assignedPlayer(%d)", index)
+        local key = string.format("farms.assignedPlayers.assignedPlayer(%d)", index)
 
         setXMLString(xmlFile, key .. "#uniqueUserId", uniqueUserId)
         setXMLInt(xmlFile, key .. "#farmId", farmId)
 
         index = index + 1
+        --print("assignedUser: " .. tostring(uniqueUserId), tostring(farmId))
     end
 
     saveXMLFile(xmlFile)
@@ -114,6 +115,7 @@ end
 function LimitedDailyIncome:onUserJoinGame(superFunc, uniqueUserId, userId, user)
     local farm = g_farmManager:getFarmForUniqueUserId(uniqueUserId)
     local farmId = farm.farmId
+    
     
     if farmId ~= g_farmManager.SPECTATOR_FARM_ID then
         LimitedDailyIncome.wasPlayerOnline[farmId] = LimitedDailyIncome:checkIfUserIsAssignedToFarm(farmId, uniqueUserId)
@@ -129,16 +131,20 @@ end
 function LimitedDailyIncome:addUser(superFunc, userId, uniqueUserId, isFarmManager, user)
     -- first let the original function do its work, then do our own
     superFunc(self, userId, uniqueUserId, isFarmManager, user)
-    
+    -- need to get the user for the uniqueUserId from the userManager. the uniqueUserId passed by the function could be "player"
+    -- which is the static value of g_farmManager.SINGLEPLAYER_UUID
+    user = g_currentMission.userManager:getUserByUserId(userId)
+    uniqueUserId = user:getUniqueUserId()
+
     local spectator_farm = g_farmManager.SPECTATOR_FARM_ID
     -- assign new user to first farm he joins
     if LimitedDailyIncome.uniqueUserIdToAssignedFarm[uniqueUserId] == nil and self.farmId ~= spectator_farm then
         LimitedDailyIncome.uniqueUserIdToAssignedFarm[uniqueUserId] = self.farmId
-        return
+        
     end
 
     -- check if user that joined the farm is assigned to the farm and if so there was a player online
-    self.wasPlayerOnline[self.farmId] = LimitedDailyIncome:checkIfUserIsAssignedToFarm(self.farmId, uniqueUserId)
+    LimitedDailyIncome.wasPlayerOnline[self.farmId] = LimitedDailyIncome:checkIfUserIsAssignedToFarm(self.farmId, uniqueUserId)
 end
 
 function LimitedDailyIncome:checkIfUserIsAssignedToFarm(farmId, uniqueUserId)
@@ -147,7 +153,7 @@ end
 
 -- daily reset to defaults
 function LimitedDailyIncome:onDayChanged()
-    for farmId, _ in pairs(LimitedDailyIncome.sales) do
+    for farmId, _ in pairs(self.sales) do
         LimitedDailyIncome.sales[farmId] = 0
 
         if not LimitedDailyIncome.wasPlayerOnline[farmId] then
@@ -165,7 +171,7 @@ end
 --register new farm with default values
 function LimitedDailyIncome:createFarm(superFunc, name, color, password, farmId)
     local farm = superFunc(self, name, color, password, farmId)
-
+    
     if farm ~= nil then
         farmId = farm.farmId
         LimitedDailyIncome.sales[farmId] = 0
@@ -192,13 +198,13 @@ end
 
 -- keep track of earned money to measure the total amount
 function LimitedDailyIncome:addMoney(amount, farmId, moneyType, addChange, forceShowChange)
-    if amount > 0 and not LimitedDailyIncome:isMoneyTypeAllowed(moneyType) then
+    if amount > 0 and not self:isMoneyTypeAllowed(moneyType) then
         LimitedDailyIncome.sales[farmId] = LimitedDailyIncome.sales[farmId] + amount
     end
 end
 
 function LimitedDailyIncome:isMoneyTypeAllowed(moneyType)
-    for _, type in pairs(LimitedDailyIncome.allowedMoneyTypes) do
+    for _, type in pairs(self.allowedMoneyTypes) do
         if moneyType == type then
             return true
         end
@@ -238,7 +244,7 @@ function LimitedDailyIncome:applyChangesFarms(superFunc)
     -- get vehicle the trailer is attached to
     local farmId = self.husbandry.ownerFarmId
     
-    LimitedDailyIncome:checkTotalSum(self, superFunc, farmId)
+    self:checkTotalSum(self, superFunc, farmId)
 end
 
 function LimitedDailyIncome:checkTotalSum(this, superFunc, farmId)
@@ -270,7 +276,7 @@ function LimitedDailyIncome:sellWood(superFunc, farmId)
     superFunc(self, farmId)
 end
 
-FarmManager.saveToXMLFile = Utils.prependedFunction(FarmManager.saveToXMLFile, LimitedDailyIncome.saveToXMLFile)
+FarmManager.saveToXMLFile = Utils.appendedFunction(FarmManager.saveToXMLFile, LimitedDailyIncome.saveToXMLFile)
 FarmManager.loadFromXMLFile = Utils.appendedFunction(FarmManager.loadFromXMLFile, LimitedDailyIncome.loadFromXMLFile)
 --tracking money
 FSBaseMission.addMoney = Utils.prependedFunction(FSBaseMission.addMoney, LimitedDailyIncome.addMoney)

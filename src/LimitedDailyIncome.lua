@@ -76,7 +76,7 @@ function LimitedDailyIncome:loadFromXMLFile(xmlFilename)
 
     delete(xmlFile)
 
-    if g_server ~= nil then
+    if true then--g_server ~= nil then
         LimitedDailyIncome:loadStaticValues()
     end
 end
@@ -114,7 +114,7 @@ function LimitedDailyIncome:saveToXMLFile(xmlFilename)
     saveXMLFile(xmlFile)
 	delete(xmlFile)
 
-    if g_server ~= nil then
+    if true then-- g_server ~= nil then
         LimitedDailyIncome:saveStaticValues()
     end
 end
@@ -300,8 +300,22 @@ function LimitedDailyIncome:checkTotalSum(this, superFunc, farmId)
 end
 
 function LimitedDailyIncome:addFillLevelFromTool(superFunc, farmId, deltaFillLevel, fillType, fillInfo, toolType)
-    if LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
+    local usedByMission = false
+
+    -- need to check for missions since unloading for mission is still allowed
+    for _, mission in pairs(self.missions) do
+        if mission.fillSold ~= nil and mission.fillType == fillType and mission.farmId == farmId then
+            mission:fillSold(deltaFillLevel)
+
+            usedByMission = true
+
+            break
+        end
+    end
+
+    if not usedByMission and LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
         --TODO: show error message
+        --TODO: stop tipping animation of trailer
         return 0
     end
 
@@ -311,6 +325,10 @@ end
 function LimitedDailyIncome:sellWood(superFunc, farmId)
     if LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
         --TODO: show error message
+        -- test-popup
+        g_gui:showInfoDialog({
+			text = "Du kannst kein Holz mehr verkaufen. Dein tägliches Limit ist erreicht."--g_l18n:getText()
+		})
         return
     end
 

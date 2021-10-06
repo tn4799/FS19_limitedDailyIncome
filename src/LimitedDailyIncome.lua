@@ -18,12 +18,13 @@ LimitedDailyIncome.STANDARD_LIMIT = 500000
 -- Increase when player was not online.
 LimitedDailyIncome.INCREASE_LIMIT_OFFLINE = 250000
 -- Daily Limit that gets ignored.
-LimitedDailyIncome.IGNORE_INCOME_LIMIT = 30000
+LimitedDailyIncome.SMALL_SALES_LIMIT = 30000
 -- Increase when player stays below the limit.
-LimitedDailyIncome.INCREASE_LIMIT_IGNORE = 50000
+LimitedDailyIncome.INCREASE_LIMIT_SMALL_SALES = 50000
 
 function LimitedDailyIncome:loadMapFinished(node, arguments, callAsyncCallback)
     g_currentMission.environment:addDayChangeListener(LimitedDailyIncome)
+    LimitedDailyIncome.staticValuesFilename = string.format(getUserProfileAppPath() .. "modsSettings/LimitedDailyIncome/savegame%d/LimitedDailyIncome.xml", g_careerScreen.selectedIndex)
 end
 
 function LimitedDailyIncome:loadFromXMLFile(xmlFilename)
@@ -74,6 +75,10 @@ function LimitedDailyIncome:loadFromXMLFile(xmlFilename)
     end
 
     delete(xmlFile)
+
+    if true then--g_server ~= nil then
+        LimitedDailyIncome:loadStaticValues()
+    end
 end
 
 function LimitedDailyIncome:saveToXMLFile(xmlFilename)
@@ -108,6 +113,44 @@ function LimitedDailyIncome:saveToXMLFile(xmlFilename)
 
     saveXMLFile(xmlFile)
 	delete(xmlFile)
+
+    if true then-- g_server ~= nil then
+        LimitedDailyIncome:saveStaticValues()
+    end
+end
+
+function LimitedDailyIncome:loadStaticValues()
+    if not fileExists(LimitedDailyIncome.staticValuesFilename) then
+        return
+    end
+
+    local xmlFile = loadXMLFile("TempXML", LimitedDailyIncome.staticValuesFilename)
+    local key = "limitedDailyIncome"
+
+    LimitedDailyIncome.STANDARD_LIMIT = getXMLInt(xmlFile, key .. ".standardLimit")
+    LimitedDailyIncome.SMALL_SALES_LIMIT = getXMLInt(xmlFile, key .. ".smallSalesLimit")
+    LimitedDailyIncome.INCREASE_LIMIT_OFFLINE = getXMLInt(xmlFile, key .. ".increaseLimitOffline")
+    LimitedDailyIncome.INCREASE_LIMIT_SMALL_SALES = getXMLInt(xmlFile, key .. ".increaseLimitSmallSales")
+
+    delete(xmlFile)
+end
+
+function LimitedDailyIncome:saveStaticValues()
+    local modSettingsPath = getUserProfileAppPath() .. "/modsSettings/LimitedDailyIncome"
+    local savegamePath = string.format(modSettingsPath .. "/savegame%d", g_careerScreen.selectedIndex)
+    createFolder(modSettingsPath)
+    createFolder(savegamePath)
+
+    local xmlFile = createXMLFile("LimitedDailyIncomeXML", LimitedDailyIncome.staticValuesFilename, "limitedDailyIncome")
+    local key = "limitedDailyIncome"
+
+    setXMLInt(xmlFile, key .. ".standardLimit", LimitedDailyIncome.STANDARD_LIMIT)
+    setXMLInt(xmlFile, key .. ".smallSalesLimit", LimitedDailyIncome.SMALL_SALES_LIMIT)
+    setXMLInt(xmlFile, key .. ".increaseLimitOffline", LimitedDailyIncome.INCREASE_LIMIT_OFFLINE)
+    setXMLInt(xmlFile, key .. ".increaseLimitSmallSales", LimitedDailyIncome.INCREASE_LIMIT_SMALL_SALES)
+
+    saveXMLFile(xmlFile)
+    delete(xmlFile)
 end
 
 -- this function is called when a player joins the game and he already was in a farm the last time he played
@@ -115,8 +158,7 @@ end
 function LimitedDailyIncome:onUserJoinGame(superFunc, uniqueUserId, userId, user)
     local farm = g_farmManager:getFarmForUniqueUserId(uniqueUserId)
     local farmId = farm.farmId
-    
-    
+
     if farmId ~= g_farmManager.SPECTATOR_FARM_ID then
         LimitedDailyIncome.wasPlayerOnline[farmId] = LimitedDailyIncome:checkIfUserIsAssignedToFarm(farmId, uniqueUserId)
     end
@@ -140,7 +182,6 @@ function LimitedDailyIncome:addUser(superFunc, userId, uniqueUserId, isFarmManag
     -- assign new user to first farm he joins
     if LimitedDailyIncome.uniqueUserIdToAssignedFarm[uniqueUserId] == nil and self.farmId ~= spectator_farm then
         LimitedDailyIncome.uniqueUserIdToAssignedFarm[uniqueUserId] = self.farmId
-        
     end
 
     -- check if user that joined the farm is assigned to the farm and if so there was a player online
@@ -158,8 +199,8 @@ function LimitedDailyIncome:dayChanged()
 
         if not LimitedDailyIncome.wasPlayerOnline[farmId] then
             LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.salesLimit[farmId] + LimitedDailyIncome.INCREASE_LIMIT_OFFLINE
-        elseif LimitedDailyIncome.sales[farmId] <= LimitedDailyIncome.IGNORE_INCOME_LIMIT then
-            LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.salesLimit[farmId] + LimitedDailyIncome.INCREASE_LIMIT_IGNORE
+        elseif LimitedDailyIncome.sales[farmId] <= LimitedDailyIncome.SMALL_SALES_LIMIT then
+            LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.salesLimit[farmId] + LimitedDailyIncome.INCREASE_LIMIT_SMALL_SALES
         else
             LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.STANDARD_LIMIT
         end
@@ -171,7 +212,7 @@ end
 --register new farm with default values
 function LimitedDailyIncome:createFarm(superFunc, name, color, password, farmId)
     local farm = superFunc(self, name, color, password, farmId)
-    
+
     if farm ~= nil then
         farmId = farm.farmId
         LimitedDailyIncome.sales[farmId] = 0
@@ -235,7 +276,7 @@ function LimitedDailyIncome:applyChangesTrailer(superFunc)
         --alternative solution: g_currentMission.player.farmId
         --must look deeper into it to decide which solution is better
     end
-    
+
     LimitedDailyIncome:checkTotalSum(self, superFunc, farmId)
 end
 
@@ -243,7 +284,7 @@ end
 function LimitedDailyIncome:applyChangesFarms(superFunc)
     -- get vehicle the trailer is attached to
     local farmId = self.husbandry.ownerFarmId
-    
+
     self:checkTotalSum(self, superFunc, farmId)
 end
 

@@ -76,7 +76,7 @@ function LimitedDailyIncome:loadFromXMLFile(xmlFilename)
 
     delete(xmlFile)
 
-    if true then--g_server ~= nil then
+    if g_server ~= nil then
         LimitedDailyIncome:loadStaticValues()
     end
 end
@@ -114,7 +114,7 @@ function LimitedDailyIncome:saveToXMLFile(xmlFilename)
     saveXMLFile(xmlFile)
 	delete(xmlFile)
 
-    if true then-- g_server ~= nil then
+    if g_server ~= nil then
         LimitedDailyIncome:saveStaticValues()
     end
 end

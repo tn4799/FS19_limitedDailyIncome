@@ -152,13 +152,13 @@ function LimitedDailyIncome:checkIfUserIsAssignedToFarm(farmId, uniqueUserId)
 end
 
 -- daily reset to defaults
-function LimitedDailyIncome:onDayChanged()
+function LimitedDailyIncome:dayChanged()
     for farmId, _ in pairs(self.sales) do
         LimitedDailyIncome.sales[farmId] = 0
 
         if not LimitedDailyIncome.wasPlayerOnline[farmId] then
             LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.salesLimit[farmId] + LimitedDailyIncome.INCREASE_LIMIT_OFFLINE
-        elseif LimitedDailyIncome.sales <= LimitedDailyIncome.IGNORE_INCOME_LIMIT then
+        elseif LimitedDailyIncome.sales[farmId] <= LimitedDailyIncome.IGNORE_INCOME_LIMIT then
             LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.salesLimit[farmId] + LimitedDailyIncome.INCREASE_LIMIT_IGNORE
         else
             LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.STANDARD_LIMIT
@@ -198,7 +198,7 @@ end
 
 -- keep track of earned money to measure the total amount
 function LimitedDailyIncome:addMoney(amount, farmId, moneyType, addChange, forceShowChange)
-    if amount > 0 and not self:isMoneyTypeAllowed(moneyType) then
+    if amount > 0 and not LimitedDailyIncome:isMoneyTypeAllowed(moneyType) then
         LimitedDailyIncome.sales[farmId] = LimitedDailyIncome.sales[farmId] + amount
     end
 end

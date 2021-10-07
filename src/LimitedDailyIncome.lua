@@ -290,7 +290,6 @@ end
 
 -- disable making money with selling animals through selling at animalTrader and husbandaries
 function LimitedDailyIncome:applyChangesFarms(superFunc)
-    -- get vehicle the trailer is attached to
     local farmId = self.husbandry.ownerFarmId
 
     LimitedDailyIncome:checkTotalSum(self, superFunc, farmId)

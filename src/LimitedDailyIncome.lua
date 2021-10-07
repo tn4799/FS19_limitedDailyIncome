@@ -15,7 +15,7 @@ LimitedDailyIncome.allowedMoneyTypes = {
 -- Daily Limit
 LimitedDailyIncome.STANDARD_LIMIT = 500000
 -- Increase when player was not online.
-LimitedDailyIncome.INCREASE_LIMIT_OFFLINE = 250000
+LimitedDailyIncome.INCREASE_LIMIT_NO_SALES = 250000
 -- Daily Limit that gets ignored.
 LimitedDailyIncome.SMALL_SALES_LIMIT = 30000
 -- Increase when player stays below the limit.
@@ -132,24 +132,19 @@ function LimitedDailyIncome:loadStaticValues()
 
     LimitedDailyIncome.STANDARD_LIMIT = getXMLInt(xmlFile, key .. ".standardLimit")
     LimitedDailyIncome.SMALL_SALES_LIMIT = getXMLInt(xmlFile, key .. ".smallSalesLimit")
-    LimitedDailyIncome.INCREASE_LIMIT_OFFLINE = getXMLInt(xmlFile, key .. ".increaseLimitOffline")
+    LimitedDailyIncome.INCREASE_LIMIT_NO_SALES = getXMLInt(xmlFile, key .. ".increaseLimitNoSales")
     LimitedDailyIncome.INCREASE_LIMIT_SMALL_SALES = getXMLInt(xmlFile, key .. ".increaseLimitSmallSales")
 
     delete(xmlFile)
 end
 
 function LimitedDailyIncome:saveStaticValues()
-    local modSettingsPath = getUserProfileAppPath() .. "/modsSettings/LimitedDailyIncome"
-    local savegamePath = string.format(modSettingsPath .. "/savegame%d", g_careerScreen.selectedIndex)
-    createFolder(modSettingsPath)
-    createFolder(savegamePath)
-
     local xmlFile = createXMLFile("LimitedDailyIncomeXML", LimitedDailyIncome.staticValuesFilename, "limitedDailyIncome")
     local key = "limitedDailyIncome"
 
     setXMLInt(xmlFile, key .. ".standardLimit", LimitedDailyIncome.STANDARD_LIMIT)
     setXMLInt(xmlFile, key .. ".smallSalesLimit", LimitedDailyIncome.SMALL_SALES_LIMIT)
-    setXMLInt(xmlFile, key .. ".increaseLimitOffline", LimitedDailyIncome.INCREASE_LIMIT_OFFLINE)
+    setXMLInt(xmlFile, key .. ".increaseLimitNoSales", LimitedDailyIncome.INCREASE_LIMIT_NO_SALES)
     setXMLInt(xmlFile, key .. ".increaseLimitSmallSales", LimitedDailyIncome.INCREASE_LIMIT_SMALL_SALES)
 
     saveXMLFile(xmlFile)
@@ -183,7 +178,7 @@ end
 function LimitedDailyIncome:dayChanged()
     for farmId, sales in pairs(self.sales) do
         if sales == 0 then
-            LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.salesLimit[farmId] + LimitedDailyIncome.INCREASE_LIMIT_OFFLINE
+            LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.salesLimit[farmId] + LimitedDailyIncome.INCREASE_LIMIT_NO_SALES
         elseif sales <= LimitedDailyIncome.SMALL_SALES_LIMIT then
             LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.salesLimit[farmId] + LimitedDailyIncome.INCREASE_LIMIT_SMALL_SALES
         else

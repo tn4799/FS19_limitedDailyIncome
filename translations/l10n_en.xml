@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<l10n>
+	<texts>
+		<text name="LIMIT_REACHED_WOOD" 							text="You can't sell any more Wood. Daily limit reached." />
+		<text name="LIMIT_REACHED_Mission" 							text="You can't accept another Mission. Daily limit reached." />
+		<text name="LIMIT_REACHED_FRUIT" 							text="You can't sell any more yield. Daily limit reached." />
+		<text name="LIMIT_REACHED_ANIMAL" 							text="You can't sell any more Animals. Daily limit reached." />
+		
+</texts>
+</l10n>

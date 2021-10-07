@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<l10n>
+	<texts>
+		<text name="LIMIT_REACHED_WOOD" 							text="Du kannst kein Holz mehr verkaufen. Dein tägliches Limit ist erreicht." />
+		<text name="LIMIT_REACHED_Mission" 							text="Du kannst kein Mission mehr annehmen. Dein tägliches Limit ist erreicht." />
+		<text name="LIMIT_REACHED_FRUIT" 							text="Du kannst keine Ernte mehr verkaufen. Dein tägliches Limit ist erreicht." />
+		<text name="LIMIT_REACHED_ANIMAL" 							text="Du kannst kein Tiere mehr verkaufen. Dein tägliches Limit ist erreicht." />
+		
+</texts>
+</l10n>

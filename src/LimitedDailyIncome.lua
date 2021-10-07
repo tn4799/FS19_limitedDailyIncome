@@ -277,6 +277,7 @@ function LimitedDailyIncome:checkTotalSum(this, superFunc, farmId)
 end
 
 function LimitedDailyIncome:addFillLevelFromTool(superFunc, farmId, deltaFillLevel, fillType, fillInfo, toolType)
+    --TODO: check if this method is called when limit is reached
     local usedByMission = false
 
     -- need to check for missions since unloading for mission is still allowed
@@ -292,7 +293,6 @@ function LimitedDailyIncome:addFillLevelFromTool(superFunc, farmId, deltaFillLev
 
     if not usedByMission and LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
         --TODO: show error message
-        --TODO: stop tipping animation of trailer
         return 0
     end
 
@@ -301,8 +301,6 @@ end
 
 function LimitedDailyIncome:sellWood(superFunc, farmId)
     if LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
-        --TODO: show error message
-        -- test-popup
         g_gui:showInfoDialog({
 			text = g_l18n:getText(LIMIT_REACHED_WOOD)
 		})
@@ -314,7 +312,6 @@ end
 
 function LimitedDailyIncome:getIsFillAllowedFromFarm(superFunc, farmId)
     if LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
-        --TODO: show error
         return false
     end
 

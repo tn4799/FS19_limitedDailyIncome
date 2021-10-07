@@ -24,7 +24,15 @@ LimitedDailyIncome.INCREASE_LIMIT_SMALL_SALES = 50000
 
 function LimitedDailyIncome:loadMapFinished(node, arguments, callAsyncCallback)
     g_currentMission.environment:addDayChangeListener(LimitedDailyIncome)
-    LimitedDailyIncome.staticValuesFilename = string.format(getUserProfileAppPath() .. "modsSettings/LimitedDailyIncome/savegame%d/LimitedDailyIncome.xml", g_careerScreen.selectedIndex)
+    LimitedDailyIncome.staticValuesFilename = string.format(getUserProfileAppPath() .. "savegame%d/LimitedDailyIncome.xml", g_careerScreen.selectedIndex)
+
+    local vehicleTypes = g_vehicleTypeManager:getVehicleTypes()
+    for _, vehicleType in pairs(vehicleTypes) do
+        if SpecializationUtil.hasSpecialization(Dischargeable, vehicleType.specializations) then
+            --print("overwrite function for vehicleType: " .. vehicleType.name)
+            SpecializationUtil.registerOverwrittenFunction(vehicleType, "handleDischarge", LimitedDailyIncome.handleDischarge)
+        end
+    end
 end
 
 function LimitedDailyIncome:loadFromXMLFile(xmlFilename)
@@ -285,7 +293,7 @@ function LimitedDailyIncome:applyChangesFarms(superFunc)
     -- get vehicle the trailer is attached to
     local farmId = self.husbandry.ownerFarmId
 
-    self:checkTotalSum(self, superFunc, farmId)
+    LimitedDailyIncome:checkTotalSum(self, superFunc, farmId)
 end
 
 function LimitedDailyIncome:checkTotalSum(this, superFunc, farmId)
@@ -335,6 +343,27 @@ function LimitedDailyIncome:sellWood(superFunc, farmId)
     superFunc(self, farmId)
 end
 
+function LimitedDailyIncome:getIsFillAllowedFromFarm(superFunc, farmId)
+    if LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
+        --TODO: show error
+        return false
+    end
+
+    return true
+end
+
+function LimitedDailyIncome:handleDischarge(superFunc, dischargeNode, dischargedLiters, minDropReached, hasMinDropFillLevel)
+    superFunc(self, dischargeNode, dischargedLiters, minDropReached, hasMinDropFillLevel)
+
+    local spec = self.spec_dischargeable
+    if spec.currentDischargeState == Dischargeable.DISCHARGE_STATE_OBJECT then
+
+        if not LimitedDailyIncome:getIsFillAllowedFromFarm(nil, self:getActiveFarm()) then
+			self:setDischargeState(Dischargeable.DISCHARGE_STATE_OFF)
+		end
+    end
+end
+
 FarmManager.saveToXMLFile = Utils.appendedFunction(FarmManager.saveToXMLFile, LimitedDailyIncome.saveToXMLFile)
 FarmManager.loadFromXMLFile = Utils.appendedFunction(FarmManager.loadFromXMLFile, LimitedDailyIncome.loadFromXMLFile)
 --tracking money
@@ -351,6 +380,7 @@ MissionManager.startMission = Utils.overwrittenFunction(MissionManager.startMiss
 DealerFarmStrategie.applyChanges = Utils.overwrittenFunction(DealerFarmStrategie.applyChanges, LimitedDailyIncome.applyChangesFarms)
 DealerTrailerStrategie.applyChanges = Utils.overwrittenFunction(DealerTrailerStrategie.applyChanges, LimitedDailyIncome.applyChangesTrailer)
 SellingStation.addFillLevelFromTool = Utils.overwrittenFunction(SellingStation.addFillLevelFromTool, LimitedDailyIncome.addFillLevelFromTool)
+SellingStation.getIsFillAllowedFromFarm = Utils.overwrittenFunction(SellingStation.getIsFillAllowedFromFarm, LimitedDailyIncome.getIsFillAllowedFromFarm)
 WoodSellStationPlaceable.sellWood = Utils.overwrittenFunction(WoodSellStationPlaceable.sellWood, LimitedDailyIncome.sellWood)
 
 BaseMission.loadMapFinished = Utils.appendedFunction(BaseMission.loadMapFinished, LimitedDailyIncome.loadMapFinished)

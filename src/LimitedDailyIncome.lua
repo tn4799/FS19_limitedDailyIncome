@@ -334,7 +334,7 @@ function LimitedDailyIncome:sellWood(superFunc, farmId)
         --TODO: show error message
         -- test-popup
         g_gui:showInfoDialog({
-			text = "Du kannst kein Holz mehr verkaufen. Dein tägliches Limit ist erreicht."--g_l18n:getText()
+			text = g_l18n:getText(LIMIT_REACHED_WOOD)
 		})
         return
     end

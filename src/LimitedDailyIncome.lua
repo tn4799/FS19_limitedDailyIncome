@@ -241,7 +241,7 @@ end
 -- disable mission activation if sales limit is passed
 function LimitedDailyIncome:startMission(superFunc, mission, farmId, spawnVehicles)
     if LimitedDailyIncome.sales[farmId] >= LimitedDailyIncome.salesLimit[farmId] then
-        LimitedDailyIncome:showErrorDialog(g_l18n:getText("LIMIT_REACHED_MISSION"))
+        LimitedDailyIncome:showErrorDialog("LIMIT_REACHED_MISSION")
         return
     end
 
@@ -276,7 +276,7 @@ function LimitedDailyIncome:checkTotalSum(this, superFunc, farmId)
     local _, _, _, total = this:getPrices()
 
     if LimitedDailyIncome.sales[farmId] >= LimitedDailyIncome.salesLimit[farmId] and total > 0 then
-        LimitedDailyIncome:showErrorDialog(g_l18n:getText("LIMIT_REACHED_ANIMAL"))
+        LimitedDailyIncome:showErrorDialog("LIMIT_REACHED_ANIMAL")
         return
     end
 
@@ -299,7 +299,7 @@ function LimitedDailyIncome:addFillLevelFromTool(superFunc, farmId, deltaFillLev
     end
 
     if not usedByMission and LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
-        LimitedDailyIncome:showErrorDialog(g_l18n:getText("LIMIT_REACHED_FRUIT"))
+        LimitedDailyIncome:showErrorDialog("LIMIT_REACHED_FRUIT")
         return 0
     end
 
@@ -308,7 +308,7 @@ end
 
 function LimitedDailyIncome:sellWood(superFunc, farmId)
     if LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
-        LimitedDailyIncome:showErrorDialog(g_l18n:getText("LIMIT_REACHED_WOOD"))
+        LimitedDailyIncome:showErrorDialog("LIMIT_REACHED_WOOD")
         return
     end
 
@@ -337,7 +337,7 @@ end
 
 function LimitedDailyIncome:showErrorDialog(errorMessage)
     g_gui:showInfoDialog({
-        text = errorMessage
+        text = g_i18n:getText(errorMessage)
     })
 end
 

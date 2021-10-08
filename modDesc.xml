@@ -20,5 +20,5 @@ Bla
         <sourceFile filename="src/LimitedDailyIncome.lua"/>
     </extraSourceFiles>
 
-    <!--l10 filenamePrefix="translations/l10n"/-->
+    <l10 filenamePrefix="translations/l10n"/>
 </modDesc>

@@ -241,7 +241,7 @@ end
 -- disable mission activation if sales limit is passed
 function LimitedDailyIncome:startMission(superFunc, mission, farmId, spawnVehicles)
     if LimitedDailyIncome.sales[farmId] >= LimitedDailyIncome.salesLimit[farmId] then
-        --TODO: Show error "you have earned to much money today. Please wait till the next day." on screen
+        LimitedDailyIncome:showErrorDialog(g_l18n:getText("LIMIT_REACHED_MISSION"))
         return
     end
 
@@ -276,7 +276,7 @@ function LimitedDailyIncome:checkTotalSum(this, superFunc, farmId)
     local _, _, _, total = this:getPrices()
 
     if LimitedDailyIncome.sales[farmId] >= LimitedDailyIncome.salesLimit[farmId] and total > 0 then
-        --TODO: Show error "you have earned to much money today to make money with selling animals. Please wait till the next day." on screen
+        LimitedDailyIncome:showErrorDialog(g_l18n:getText("LIMIT_REACHED_ANIMAL"))
         return
     end
 
@@ -299,7 +299,7 @@ function LimitedDailyIncome:addFillLevelFromTool(superFunc, farmId, deltaFillLev
     end
 
     if not usedByMission and LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
-        --TODO: show error message
+        LimitedDailyIncome:showErrorDialog(g_l18n:getText("LIMIT_REACHED_FRUIT"))
         return 0
     end
 
@@ -308,9 +308,7 @@ end
 
 function LimitedDailyIncome:sellWood(superFunc, farmId)
     if LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
-        g_gui:showInfoDialog({
-			text = g_l18n:getText(LIMIT_REACHED_WOOD)
-		})
+        LimitedDailyIncome:showErrorDialog(g_l18n:getText("LIMIT_REACHED_WOOD"))
         return
     end
 
@@ -335,6 +333,12 @@ function LimitedDailyIncome:handleDischarge(superFunc, dischargeNode, discharged
 			self:setDischargeState(Dischargeable.DISCHARGE_STATE_OFF)
 		end
     end
+end
+
+function LimitedDailyIncome:showErrorDialog(errorMessage)
+    g_gui:showInfoDialog({
+        text = errorMessage
+    })
 end
 
 FarmManager.saveToXMLFile = Utils.appendedFunction(FarmManager.saveToXMLFile, LimitedDailyIncome.saveToXMLFile)

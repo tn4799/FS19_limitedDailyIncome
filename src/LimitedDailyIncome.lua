@@ -31,6 +31,8 @@ function LimitedDailyIncome:loadMapFinished(node, arguments, callAsyncCallback)
             SpecializationUtil.registerOverwrittenFunction(vehicleType, "handleDischarge", LimitedDailyIncome.handleDischarge)
         end
     end
+
+    g_messageCenter:subscribe(MessageType.FARM_CREATED, LimitedDailyIncome.onFarmCreated, LimitedDailyIncome)
 end
 
 function LimitedDailyIncome:loadFromXMLFile(xmlFilename)
@@ -200,6 +202,11 @@ function LimitedDailyIncome:createFarm(superFunc, name, color, password, farmId)
     end
 
     return farm
+end
+
+function LimitedDailyIncome:onFarmCreated(farmId)
+    LimitedDailyIncome.sales[farmId] = 0
+    LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.STANDARD_LIMIT
 end
 
 --remove farm if deleted

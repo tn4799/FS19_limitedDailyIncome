@@ -3,8 +3,12 @@ UpdateAssignedPlayersEvent_mt = Class(UpdateAssignedPlayersEvent, Event)
 
 InitEventClass(UpdateAssignedPlayersEvent, "UpdateAssignedPlayersEvent")
 
+function UpdateAssignedPlayersEvent:emptyNew()
+    return Event:new(UpdateAssignedPlayersEvent_mt)
+end
+
 function UpdateAssignedPlayersEvent:new(uniqueUserId, assignedFarmId)
-    local self = Event:new(UpdateAssignedPlayersEvent_mt)
+    local self = UpdateAssignedPlayersEvent:emptyNew()
 
     self.uniqueUserId = uniqueUserId
     self.assignedFarmId = assignedFarmId
@@ -33,3 +37,5 @@ function UpdateAssignedPlayersEvent:run(connection)
         end
     end
 end
+
+print("loaded UpdateAssignedPlayersEvent")

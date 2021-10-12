@@ -181,8 +181,6 @@ end
 
 function LimitedDailyIncome:playerJoinedGame(uniqueUserId, userId, user, connection)
     if g_currentMission:getIsServer() then
-        uniqueUserId = user:getUniqueUserId()
-
         -- sync assigned users with client
         for uuid, farmId in pairs(LimitedDailyIncome.uniqueUserIdToAssignedFarm) do
             g_client:getServerConnection():sendEvent(UpdateAssignedPlayersEvent:new(uuid, farmId))
@@ -381,13 +379,24 @@ function LimitedDailyIncome:showErrorDialog(errorMessage)
 end
 
 function LimitedDailyIncome:addConsoleCommands()
-    addConsoleCommand("ldiPrintFarmData", "Prints the sales and salesLimit of the farm", "printDataFromFarm", self)
+    addConsoleCommand("ldiPrintFarmData", "Prints the sales and salesLimit of the farm", "printDataFromFarm", LimitedDailyIncome)
+    addConsoleCommand("ldiPrintAll", "Prints the whole content of sales and salesLimit.", "printAllData", LimitedDailyIncome)
 end
 
 -- functions for console commands
 function LimitedDailyIncome:printDataFromFarm(farmId)
+    print("farmId: " .. farmId)
     print("sales: " .. tostring(LimitedDailyIncome.sales[farmId]))
     print("salesLimit: " .. tostring(LimitedDailyIncome.salesLimit[farmId]))
+end
+
+function LimitedDailyIncome:printAllData()
+    for farmId, _ in pairs(LimitedDailyIncome.sales) do
+        print("farmId: " .. farmId)
+        print("sales: " .. tostring(LimitedDailyIncome.sales[farmId]))
+        print("salesLimit: " .. tostring(LimitedDailyIncome.salesLimit[farmId]))
+        print("\n")
+    end
 end
 
 FarmManager.saveToXMLFile = Utils.appendedFunction(FarmManager.saveToXMLFile, LimitedDailyIncome.saveToXMLFile)

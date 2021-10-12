@@ -3,6 +3,8 @@ source(g_currentModDirectory .. "src/events/UpdateAssignedPlayersEvent.lua")
 
 LimitedDailyIncome = {}
 
+LimitedDailyIncome.isDevelopmentVersion = true
+
 LimitedDailyIncome.sales = {}
 LimitedDailyIncome.salesLimit = {}
 LimitedDailyIncome.uniqueUserIdToAssignedFarm = {}
@@ -378,6 +380,16 @@ function LimitedDailyIncome:showErrorDialog(errorMessage)
     })
 end
 
+function LimitedDailyIncome:addConsoleCommands()
+    addConsoleCommand("ldiPrintFarmData", "Prints the sales and salesLimit of the farm", "printDataFromFarm", self)
+end
+
+-- functions for console commands
+function LimitedDailyIncome:printDataFromFarm(farmId)
+    print("sales: " .. tostring(LimitedDailyIncome.sales[farmId]))
+    print("salesLimit: " .. tostring(LimitedDailyIncome.salesLimit[farmId]))
+end
+
 FarmManager.saveToXMLFile = Utils.appendedFunction(FarmManager.saveToXMLFile, LimitedDailyIncome.saveToXMLFile)
 FarmManager.loadFromXMLFile = Utils.appendedFunction(FarmManager.loadFromXMLFile, LimitedDailyIncome.loadFromXMLFile)
 --tracking money
@@ -398,3 +410,7 @@ SellingStation.getIsFillAllowedFromFarm = Utils.overwrittenFunction(SellingStati
 WoodSellStationPlaceable.sellWood = Utils.overwrittenFunction(WoodSellStationPlaceable.sellWood, LimitedDailyIncome.sellWood)
 
 BaseMission.loadMapFinished = Utils.appendedFunction(BaseMission.loadMapFinished, LimitedDailyIncome.loadMapFinished)
+
+if LimitedDailyIncome.isDevelopmentVersion then
+    LimitedDailyIncome:addConsoleCommands()
+end

@@ -1,3 +1,6 @@
+source(g_currentModDirectory .. "src/events/UpdateDataEvent.lua")
+source(g_currentModDirectory .. "src/events/UpdateAssignedPlayersEvent.lua")
+
 LimitedDailyIncome = {}
 
 LimitedDailyIncome.sales = {}
@@ -172,22 +175,44 @@ function LimitedDailyIncome:addUser(superFunc, userId, uniqueUserId, isFarmManag
     end
 end
 
+function LimitedDailyIncome:playerJoinedGame(uniqueUserId, userId, user, connection)
+    if g_currentMission:getIsServer() then
+        uniqueUserId = user:getUniqueUserId()
+
+        -- sync assigned users with client
+        for uuid, farmId in pairs(LimitedDailyIncome.uniqueUserIdToAssignedFarm) do
+            g_client:getServerConnection():sendEvent(UpdateAssignedPlayersEvent:new(uuid, farmId))
+        end
+
+        -- sync sales and salesLimit for all farms (because user could switch farm to earn money for them)
+        for farmId, sales in pairs(LimitedDailyIncome.sales) do
+            local salesLimit = LimitedDailyIncome.salesLimit[farmId]
+            g_client:getServerConnection():sendEvent(UpdateDataEvent:new(farmId, sales, salesLimit))
+        end
+    end
+end
+
 function LimitedDailyIncome:checkIfUserIsAssignedToFarm(farmId, uniqueUserId)
     return farmId == LimitedDailyIncome.uniqueUserIdToAssignedFarm[uniqueUserId]
 end
 
 -- daily reset to defaults
 function LimitedDailyIncome:dayChanged()
-    for farmId, sales in pairs(self.sales) do
-        if sales == 0 then
-            LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.salesLimit[farmId] + LimitedDailyIncome.INCREASE_LIMIT_NO_SALES
-        elseif sales <= LimitedDailyIncome.SMALL_SALES_LIMIT then
-            LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.salesLimit[farmId] + LimitedDailyIncome.INCREASE_LIMIT_SMALL_SALES
-        else
-            LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.STANDARD_LIMIT
-        end
+    if g_currentMission:getIsServer() then
+        for farmId, sales in pairs(self.sales) do
+            if sales == 0 then
+                LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.salesLimit[farmId] + LimitedDailyIncome.INCREASE_LIMIT_NO_SALES
+            elseif sales <= LimitedDailyIncome.SMALL_SALES_LIMIT then
+                LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.salesLimit[farmId] + LimitedDailyIncome.INCREASE_LIMIT_SMALL_SALES
+            else
+                LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.STANDARD_LIMIT
+            end
 
-        LimitedDailyIncome.sales[farmId] = 0
+            LimitedDailyIncome.sales[farmId] = 0
+
+            local salesLimit = LimitedDailyIncome.salesLimit[farmId]
+            g_server:broadcastEvent(UpdateDataEvent:new(farmId, sales, salesLimit))
+        end
     end
 end
 
@@ -207,6 +232,12 @@ end
 function LimitedDailyIncome:onFarmCreated(farmId)
     LimitedDailyIncome.sales[farmId] = 0
     LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.STANDARD_LIMIT
+
+    if g_currentMission:getIsServer() then
+        local sales = LimitedDailyIncome.sales[farmId]
+        local salesLimit = LimitedDailyIncome.salesLimit[farmId]
+        g_server:broadcastEvent(UpdateDataEvent:new(farmId, sales, salesLimit))
+    end
 end
 
 --remove farm if deleted
@@ -220,12 +251,18 @@ function LimitedDailyIncome:removeFarm(farmId)
             LimitedDailyIncome.uniqueUserIdToAssignedFarm[uniqueUserId] = nil
         end
     end
+
+    --TODO: sync
 end
 
 -- keep track of earned money to measure the total amount
 function LimitedDailyIncome:addMoney(amount, farmId, moneyType, addChange, forceShowChange)
     if amount > 0 and not LimitedDailyIncome:isMoneyTypeAllowed(moneyType) then
         LimitedDailyIncome.sales[farmId] = LimitedDailyIncome.sales[farmId] + amount
+
+        if g_currentMission:getIsServer() then
+            g_server:broadcastEvent(UpdateDataEvent:new(farmId, LimitedDailyIncome.sales[farmId], LimitedDailyIncome.salesLimit[farmId]))
+        end
     end
 end
 
@@ -350,6 +387,7 @@ FarmManager.createFarm = Utils.overwrittenFunction(FarmManager.createFarm, Limit
 FarmManager.removeFarm = Utils.appendedFunction(FarmManager.removeFarm, LimitedDailyIncome.removeFarm)
 -- player management
 Farm.addUser = Utils.overwrittenFunction(Farm.addUser, LimitedDailyIncome.addUser)
+FarmManager.playerJoinedGame = Utils.appendedFunction(FarmManager.playerJoinedGame, LimitedDailyIncome.playerJoinedGame)
 -- permission managing
 -- overwritten is used because we do some code injection. This means we insert some code at the start of the original function
 MissionManager.startMission = Utils.overwrittenFunction(MissionManager.startMission, LimitedDailyIncome.startMission)

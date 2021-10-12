@@ -385,7 +385,7 @@ end
 
 -- functions for console commands
 function LimitedDailyIncome:printDataFromFarm(farmId)
-    print("farmId: " .. farmId)
+    farmId = tonumber(farmId)
     print("sales: " .. tostring(LimitedDailyIncome.sales[farmId]))
     print("salesLimit: " .. tostring(LimitedDailyIncome.salesLimit[farmId]))
 end
@@ -395,7 +395,6 @@ function LimitedDailyIncome:printAllData()
         print("farmId: " .. farmId)
         print("sales: " .. tostring(LimitedDailyIncome.sales[farmId]))
         print("salesLimit: " .. tostring(LimitedDailyIncome.salesLimit[farmId]))
-        print("\n")
     end
 end
 

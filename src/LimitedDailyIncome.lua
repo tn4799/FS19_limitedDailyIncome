@@ -27,8 +27,10 @@ LimitedDailyIncome.SMALL_SALES_LIMIT = 30000
 LimitedDailyIncome.INCREASE_LIMIT_SMALL_SALES = 50000
 
 function LimitedDailyIncome:loadMapFinished(node, arguments, callAsyncCallback)
-    g_currentMission.environment:addDayChangeListener(LimitedDailyIncome)
     LimitedDailyIncome.staticValuesFilename = string.format(getUserProfileAppPath() .. "savegame%d/LimitedDailyIncome.xml", g_careerScreen.selectedIndex)
+    if g_currentMission:getIsServer() then
+        g_currentMission.environment:addDayChangeListener(LimitedDailyIncome)
+    end
 
     local vehicleTypes = g_vehicleTypeManager:getVehicleTypes()
     for _, vehicleType in pairs(vehicleTypes) do
@@ -200,21 +202,19 @@ end
 
 -- daily reset to defaults
 function LimitedDailyIncome:dayChanged()
-    if g_currentMission:getIsServer() then
-        for farmId, sales in pairs(self.sales) do
-            if sales == 0 then
-                LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.salesLimit[farmId] + LimitedDailyIncome.INCREASE_LIMIT_NO_SALES
-            elseif sales <= LimitedDailyIncome.SMALL_SALES_LIMIT then
-                LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.salesLimit[farmId] + LimitedDailyIncome.INCREASE_LIMIT_SMALL_SALES
-            else
-                LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.STANDARD_LIMIT
-            end
-
-            LimitedDailyIncome.sales[farmId] = 0
-
-            local salesLimit = LimitedDailyIncome.salesLimit[farmId]
-            g_server:broadcastEvent(UpdateDataEvent:new(farmId, sales, salesLimit))
+    for farmId, sales in pairs(self.sales) do
+        if sales == 0 then
+            LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.salesLimit[farmId] + LimitedDailyIncome.INCREASE_LIMIT_NO_SALES
+        elseif sales <= LimitedDailyIncome.SMALL_SALES_LIMIT then
+            LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.salesLimit[farmId] + LimitedDailyIncome.INCREASE_LIMIT_SMALL_SALES
+        else
+            LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.STANDARD_LIMIT
         end
+
+        LimitedDailyIncome.sales[farmId] = 0
+
+        local salesLimit = LimitedDailyIncome.salesLimit[farmId]
+        --g_server:broadcastEvent(UpdateDataEvent:new(farmId, sales, salesLimit))
     end
 end
 

@@ -10,9 +10,84 @@
     <description>
         <en>
 <![CDATA[
-Bla
+This mod allows you to limit the income for all farms to a certain daily limit.
+
+What exactly can the mod?
+
+- Set a limit per day
+- An increase of the limit if a farm has earned no money at all on a day
+- A smaller increase of the limit, if a farm has earned only little money on a day
+- All limits can be set in the DailyLimitIncome.xml file in the savegame.
+IMPORTANT: All increased limits will be reset to the default limit as soon as you have earned a lot of money on a day!
+
+What counts as income?
+
+- Reward for missions
+- Selling crops, bales and animal products
+- Selling wood
+- Selling animals, although it's still possible to sell animals, but not for profit
+
+What can I not do once I reach my limit ?
+
+- Not accept any missions that day
+- Not sell crops, bales or animal products
+- Do not sell wood
+- Do not sell animals
+
+Can I still sell vehicles and equipment and trade with other players ?
+
+Yes! Selling equipment or a tractor does not increase your capital.
+When a player gives you money, it is his decision to move you forward.
+
+Ok, but what is the purpose of this mod ?
+
+Imagine you have a 24/7 server where players run their farms.
+Some players have a lot of time and advance on the map accordingly fast.
+Others have only time to play 2-3 times a week, basicly not much time.
+Due to the limit, players with a lot of time are slowed down in their financial advancement and 
+by increasing the limit, with no or little profit, it is possible for players with less time to catch up with the other players.
 ]]>
         </en>
+		<de>
+<![CDATA[
+Mit dieser Mod lässt sich das Einkommen für alle Farmen auf ein bestimmtes Tageslimit begrenzen.
+
+Was genau kann der Mod?
+
+- Ein Limit pro Tag setzen
+- Eine Erhöhung des Limits, wenn eine Farm an einem Tag gar kein Geld verdient hat
+- Eine kleinere Erhöhung des Limits, wenn eine Farm an einem Tag nur wenig Geld verdient wurde
+- Alle Limits sind in der DailyLimitIncome.xml Datei im Savegame einstellbar.
+WICHTIG: Alle erhöhten Limits werden wieder auf das Standardlimit zurückgesetzt sobald man an einem Tag wieder viel Geld verdient hat!
+
+Was zählt zu den Einnahmen?
+
+- Entlohnung von Missionen
+- Verkauf von Ernte, Ballen und Tierprodukten
+- Verkauf von Holz
+- Verkauf von Tieren, wobei es weiterhin möglich ist Tiere zu verkaufen, aber nicht gewinnbringend
+
+Was kann ich nicht mehr machen, wenn ich mein Limit erreicht habe ?
+
+- Keine Missionen an diesem Tag annehmen
+- Keine Ernte, Ballen oder Tierprodukte verkaufen
+- Kein Holz verkaufen
+- Keine Tiere verkaufen
+
+Kann ich weiterhin Fahrzeuge und Geräte verkaufen und mit anderen Spielern handeln ?
+
+Ja! Der Verkauf eines Gerätes oder Traktors stellt keine Kapitalerhöhung dar.
+Wenn ein Spieler dir Geld gibt, ist das seine Entscheidung dich weiter vorran zu bringen.
+
+Ok, aber was ist der Zweck dieser Mod ?
+
+Man stellt sich vor, man hat einen 24/7 Server, auf dem Spieler ihre Farmen betreiben.
+Manche Spieler haben viel Zeit und kommen auf der Map entsprechend schnell vorran.
+Andere haben nur 2-3 mal in der Woche Zeit, sprich wenig Zeit.
+Durch das Limit werden Spieler mit viel Zeit in ihrem finanziellem Vorranschreiten ausgebremst und 
+durch die Erhöhung des Limits, bei gar keinem oder wenig Gewinn ist es für Spieler mit weniger Zeit möglich, zu den anderen Spielern aufzuholen.
+]]>
+		</de>
     </description>
     <iconFilename>modIcon.dds</iconFilename>
     <multiplayer supported="true"/>

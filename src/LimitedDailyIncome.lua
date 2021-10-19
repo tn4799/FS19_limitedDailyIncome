@@ -1,5 +1,4 @@
 source(g_currentModDirectory .. "src/events/UpdateDataEvent.lua")
-source(g_currentModDirectory .. "src/events/UpdateAssignedPlayersEvent.lua")
 
 LimitedDailyIncome = {}
 
@@ -7,7 +6,6 @@ LimitedDailyIncome.isDevelopmentVersion = true
 
 LimitedDailyIncome.sales = {}
 LimitedDailyIncome.salesLimit = {}
-LimitedDailyIncome.uniqueUserIdToAssignedFarm = {}
 LimitedDailyIncome.allowedMoneyTypes = {
     MoneyType.SHOP_VEHICLE_SELL,
     MoneyType.SHOP_PROPERTY_SELL,
@@ -40,6 +38,8 @@ function LimitedDailyIncome:loadMapFinished(node, arguments, callAsyncCallback)
     end
 
     g_messageCenter:subscribe(MessageType.FARM_CREATED, LimitedDailyIncome.onFarmCreated, LimitedDailyIncome)
+    g_messageCenter:subscribe(MessageType.FARM_DELETED, LimitedDailyIncome.onFarmDeleted, LimitedDailyIncome)
+    --g_messageCenter:subscribe(MessageType.PLAYER_FARM_CHANGED, LimitedDailyIncome.onPlayerFarmChanged, LimitedDailyIncome)
 end
 
 function LimitedDailyIncome:loadFromXMLFile(xmlFilename)
@@ -47,7 +47,6 @@ function LimitedDailyIncome:loadFromXMLFile(xmlFilename)
         --load default values
         self.sales = {}
         self.salesLimit = {}
-        self.uniqueUserIdToAssignedFarm = {}
 
         return
     end
@@ -72,24 +71,9 @@ function LimitedDailyIncome:loadFromXMLFile(xmlFilename)
         i = i + 1
     end
 
-    i = 0
-
-    while true do
-        local key = string.format("farms.assignedPlayers.assignedPlayer(%d)", i)
-
-        if not hasXMLProperty(xmlFile, key) then
-			break
-		end
-
-        local uniqueUserId = getXMLString(xmlFile, key .. "#uniqueUserId")
-        LimitedDailyIncome.uniqueUserIdToAssignedFarm[uniqueUserId] = getXMLInt(xmlFile, key .. "#farmId")
-
-        i = i + 1
-    end
-
     delete(xmlFile)
 
-    if true then--g_server ~= nil then
+    if g_currentMission:getIsServer() then
         LimitedDailyIncome:loadStaticValues()
     end
 end
@@ -113,20 +97,10 @@ function LimitedDailyIncome:saveToXMLFile(xmlFilename)
 
     index = 0
 
-    for uniqueUserId, farmId in pairs(LimitedDailyIncome.uniqueUserIdToAssignedFarm) do
-        local key = string.format("farms.assignedPlayers.assignedPlayer(%d)", index)
-
-        setXMLString(xmlFile, key .. "#uniqueUserId", uniqueUserId)
-        setXMLInt(xmlFile, key .. "#farmId", farmId)
-
-        index = index + 1
-        --print("assignedUser: " .. tostring(uniqueUserId), tostring(farmId))
-    end
-
     saveXMLFile(xmlFile)
 	delete(xmlFile)
 
-    if true then-- g_server ~= nil then
+    if g_currentMission:getIsServer() then
         LimitedDailyIncome:saveStaticValues()
     end
 end
@@ -160,42 +134,14 @@ function LimitedDailyIncome:saveStaticValues()
     delete(xmlFile)
 end
 
--- this is called when a player joins a farm by himself
--- The first time a player joins a farm, he is assigned to that farm.
--- NOTE: we need overwrittenFunction here because we need to access the farmId of the farm of which addUser is called.
--- this is only possible with self, and to get that self = Farm we need to overwrite the original function
-function LimitedDailyIncome:addUser(superFunc, userId, uniqueUserId, isFarmManager, user)
-    -- first let the original function do its work, then do our own
-    superFunc(self, userId, uniqueUserId, isFarmManager, user)
-    -- need to get the user for the uniqueUserId from the userManager. the uniqueUserId passed by the function could be "player"
-    -- which is the static value of g_farmManager.SINGLEPLAYER_UUID
-    user = g_currentMission.userManager:getUserByUserId(userId)
-    uniqueUserId = user:getUniqueUserId()
-
-    local spectator_farm = g_farmManager.SPECTATOR_FARM_ID
-    -- assign new user to first farm he joins
-    if LimitedDailyIncome.uniqueUserIdToAssignedFarm[uniqueUserId] == nil and self.farmId ~= spectator_farm then
-        LimitedDailyIncome.uniqueUserIdToAssignedFarm[uniqueUserId] = self.farmId
-    end
-end
-
 function LimitedDailyIncome:playerJoinedGame(uniqueUserId, userId, user, connection)
     if g_currentMission:getIsServer() then
-        -- sync assigned users with client
-        for uuid, farmId in pairs(LimitedDailyIncome.uniqueUserIdToAssignedFarm) do
-            g_client:getServerConnection():sendEvent(UpdateAssignedPlayersEvent:new(uuid, farmId))
-        end
-
         -- sync sales and salesLimit for all farms (because user could switch farm to earn money for them)
         for farmId, sales in pairs(LimitedDailyIncome.sales) do
             local salesLimit = LimitedDailyIncome.salesLimit[farmId]
-            g_client:getServerConnection():sendEvent(UpdateDataEvent:new(farmId, sales, salesLimit))
+            g_server:broadcastEvent(UpdateDataEvent:new(farmId, sales, salesLimit), nil, connection)
         end
     end
-end
-
-function LimitedDailyIncome:checkIfUserIsAssignedToFarm(farmId, uniqueUserId)
-    return farmId == LimitedDailyIncome.uniqueUserIdToAssignedFarm[uniqueUserId]
 end
 
 -- daily reset to defaults
@@ -211,25 +157,20 @@ function LimitedDailyIncome:dayChanged()
 
         LimitedDailyIncome.sales[farmId] = 0
 
-        local salesLimit = LimitedDailyIncome.salesLimit[farmId]
-        --g_server:broadcastEvent(UpdateDataEvent:new(farmId, sales, salesLimit))
+        g_server:broadcastEvent(UpdateDataEvent:new(farmId, LimitedDailyIncome.sales[farmId], LimitedDailyIncome.salesLimit[farmId]))
     end
 end
 
 --register new farm with default values
-function LimitedDailyIncome:createFarm(superFunc, name, color, password, farmId)
-    local farm = superFunc(self, name, color, password, farmId)
-
-    if farm ~= nil then
-        farmId = farm.farmId
-        LimitedDailyIncome.sales[farmId] = 0
-        LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.STANDARD_LIMIT
+function LimitedDailyIncome:onFarmCreated(farmId)
+    if farmId == g_farmManager.SPECTATOR_FARM_ID then
+        return
     end
 
-    return farm
-end
+    if g_currentMission:getIsClient() then
+        return
+    end
 
-function LimitedDailyIncome:onFarmCreated(farmId)
     LimitedDailyIncome.sales[farmId] = 0
     LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.STANDARD_LIMIT
 
@@ -241,18 +182,13 @@ function LimitedDailyIncome:onFarmCreated(farmId)
 end
 
 --remove farm if deleted
-function LimitedDailyIncome:removeFarm(farmId)
+function LimitedDailyIncome:onFarmDeleted(farmId)
     LimitedDailyIncome.sales[farmId] = nil
     LimitedDailyIncome.salesLimit[farmId] = nil
 
-    -- remove all assigned players from deleted farm
-    for uniqueUserId, farmId2 in pairs(LimitedDailyIncome.uniqueUserIdToAssignedFarm) do
-        if farmId2 == farmId2 then
-            LimitedDailyIncome.uniqueUserIdToAssignedFarm[uniqueUserId] = nil
-        end
+    if g_currentMission:getIsServer() then
+        g_server:broadcastEvent(UpdateDataEvent:new(farmId, LimitedDailyIncome.sales[farmId], LimitedDailyIncome.salesLimit[farmId]))
     end
-
-    --TODO: sync
 end
 
 -- keep track of earned money to measure the total amount
@@ -317,7 +253,7 @@ function LimitedDailyIncome:checkTotalSum(this, superFunc, farmId)
         return
     end
 
-    superFunc(self)
+    superFunc(this)
 end
 
 function LimitedDailyIncome:addFillLevelFromTool(superFunc, farmId, deltaFillLevel, fillType, fillInfo, toolType)
@@ -378,6 +314,13 @@ function LimitedDailyIncome:showErrorDialog(errorMessage)
     })
 end
 
+function LimitedDailyIncome.sendObjects(self,connection)
+    for farmId, sales in pairs(LimitedDailyIncome.sales) do
+       local salesLimit = LimitedDailyIncome.salesLimit[farmId]
+       connection:sendEvent(UpdateDataEvent:new(farmId, sales, salesLimit))
+   end
+end
+
 function LimitedDailyIncome:addConsoleCommands()
     addConsoleCommand("ldiPrintFarmData", "Prints the sales and salesLimit of the farm", "printDataFromFarm", LimitedDailyIncome)
     addConsoleCommand("ldiPrintAll", "Prints the whole content of sales and salesLimit.", "printAllData", LimitedDailyIncome)
@@ -402,11 +345,7 @@ FarmManager.saveToXMLFile = Utils.appendedFunction(FarmManager.saveToXMLFile, Li
 FarmManager.loadFromXMLFile = Utils.appendedFunction(FarmManager.loadFromXMLFile, LimitedDailyIncome.loadFromXMLFile)
 --tracking money
 FSBaseMission.addMoney = Utils.prependedFunction(FSBaseMission.addMoney, LimitedDailyIncome.addMoney)
---farms Management
-FarmManager.createFarm = Utils.overwrittenFunction(FarmManager.createFarm, LimitedDailyIncome.createFarm)
-FarmManager.removeFarm = Utils.appendedFunction(FarmManager.removeFarm, LimitedDailyIncome.removeFarm)
 -- player management
-Farm.addUser = Utils.overwrittenFunction(Farm.addUser, LimitedDailyIncome.addUser)
 FarmManager.playerJoinedGame = Utils.appendedFunction(FarmManager.playerJoinedGame, LimitedDailyIncome.playerJoinedGame)
 -- permission managing
 -- overwritten is used because we do some code injection. This means we insert some code at the start of the original function
@@ -416,6 +355,8 @@ DealerTrailerStrategie.applyChanges = Utils.overwrittenFunction(DealerTrailerStr
 SellingStation.addFillLevelFromTool = Utils.overwrittenFunction(SellingStation.addFillLevelFromTool, LimitedDailyIncome.addFillLevelFromTool)
 SellingStation.getIsFillAllowedFromFarm = Utils.overwrittenFunction(SellingStation.getIsFillAllowedFromFarm, LimitedDailyIncome.getIsFillAllowedFromFarm)
 WoodSellStationPlaceable.sellWood = Utils.overwrittenFunction(WoodSellStationPlaceable.sellWood, LimitedDailyIncome.sellWood)
+
+Server.sendObjects = Utils.prependedFunction(Server.sendObjects, LimitedDailyIncome.sendObjects)
 
 BaseMission.loadMapFinished = Utils.appendedFunction(BaseMission.loadMapFinished, LimitedDailyIncome.loadMapFinished)
 

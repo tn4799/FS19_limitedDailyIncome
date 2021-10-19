@@ -32,12 +32,13 @@ function UpdateDataEvent:writeStream(streamId, connection)
 end
 
 function UpdateDataEvent:run(connection)
+    if self.farmId ~= nil then
+        LimitedDailyIncome.sales[self.farmId] = self.sales
+        LimitedDailyIncome.salesLimit[self.farmId] = self.salesLimit
+    else
+        print("error: no farmId sent")
+    end
     if not connection:getIsServer() then
-        if self.farmId ~= nil then
-            LimitedDailyIncome.sales[self.farmId] = self.sales
-            LimitedDailyIncome.salesLimit[self.farmId] = self.salesLimit
-        else
-            print("error: no farmId")
-        end
+        g_server:broadcastEvent(UpdateDataEvent:new(self.farmId, self.sales, self.salesLimit), nil, connection)
     end
 end

@@ -24,6 +24,8 @@ LimitedDailyIncome.SMALL_SALES_LIMIT = 30000
 -- Increase when player stays below the limit.
 LimitedDailyIncome.INCREASE_LIMIT_SMALL_SALES = 50000
 
+LimitedDailyIncome.OVERLAY = createImageOverlay(g_currentModDirectory .. "back.dds")
+
 function LimitedDailyIncome:loadMapFinished(node, arguments, callAsyncCallback)
     LimitedDailyIncome.staticValuesFilename = string.format(getUserProfileAppPath() .. "savegame%d/LimitedDailyIncome.xml", g_careerScreen.selectedIndex)
     if g_currentMission:getIsServer() then
@@ -113,10 +115,10 @@ function LimitedDailyIncome:loadStaticValues()
     local xmlFile = loadXMLFile("TempXML", LimitedDailyIncome.staticValuesFilename)
     local key = "limitedDailyIncome"
 
-    LimitedDailyIncome.STANDARD_LIMIT = getXMLInt(xmlFile, key .. ".standardLimit")
-    LimitedDailyIncome.SMALL_SALES_LIMIT = getXMLInt(xmlFile, key .. ".smallSalesLimit")
-    LimitedDailyIncome.INCREASE_LIMIT_NO_SALES = getXMLInt(xmlFile, key .. ".increaseLimitNoSales")
-    LimitedDailyIncome.INCREASE_LIMIT_SMALL_SALES = getXMLInt(xmlFile, key .. ".increaseLimitSmallSales")
+    LimitedDailyIncome.STANDARD_LIMIT = Utils.getNoNil(getXMLInt(xmlFile, key .. ".standardLimit"), LimitedDailyIncome.STANDARD_LIMIT)
+    LimitedDailyIncome.SMALL_SALES_LIMIT = Utils.getNoNil(getXMLInt(xmlFile, key .. ".smallSalesLimit"), LimitedDailyIncome.SMALL_SALES_LIMIT)
+    LimitedDailyIncome.INCREASE_LIMIT_NO_SALES = Utils.getNoNil(getXMLInt(xmlFile, key .. ".increaseLimitNoSales"), LimitedDailyIncome.INCREASE_LIMIT_NO_SALES)
+    LimitedDailyIncome.INCREASE_LIMIT_SMALL_SALES = Utils.getNoNil(getXMLInt(xmlFile, key .. ".increaseLimitSmallSales"), LimitedDailyIncome.INCREASE_LIMIT_SMALL_SALES)
 
     delete(xmlFile)
 end
@@ -308,6 +310,21 @@ function LimitedDailyIncome:handleDischarge(superFunc, dischargeNode, discharged
     end
 end
 
+function LimitedDailyIncome:draw()
+    local posX, posY = 0.088, 0.08
+    local width, height = 0.2, 0.14
+    local sizeHeader = 0.020
+
+    --TODO: adjust values and maybe add calculation for size of ui
+    setOverlayColor(LimitedDailyIncome.OVERLAY, 1.0, 1.0, 1.0, 1.0)
+    renderOverlay(LimitedDailyIncome.OVERLAY, posX - 0.008, posY - 0.08, width, height)
+    setTextColor(1,1,1,1)
+    setTextAlignment(RenderText.ALIGN_LEFT)
+
+    setTextBold(false)
+    renderText(posX, posY - 0.03, sizeHeader, "Testgui ist schon ein echt bescheuerter Titel einfach nur zum testen was passiert wenn der text extrem lang ist.")
+end
+
 function LimitedDailyIncome:showErrorDialog(errorMessage)
     g_gui:showInfoDialog({
         text = g_i18n:getText(errorMessage)
@@ -324,6 +341,7 @@ end
 function LimitedDailyIncome:addConsoleCommands()
     addConsoleCommand("ldiPrintFarmData", "Prints the sales and salesLimit of the farm", "printDataFromFarm", LimitedDailyIncome)
     addConsoleCommand("ldiPrintAll", "Prints the whole content of sales and salesLimit.", "printAllData", LimitedDailyIncome)
+    addConsoleCommand("restartSavegame", "load and start a savegame", "restartSaveGame", LimitedDailyIncome)
 end
 
 -- functions for console commands
@@ -338,6 +356,12 @@ function LimitedDailyIncome:printAllData()
         print("farmId: " .. farmId)
         print("sales: " .. tostring(LimitedDailyIncome.sales[farmId]))
         print("salesLimit: " .. tostring(LimitedDailyIncome.salesLimit[farmId]))
+    end
+end
+
+function LimitedDailyIncome:restartSaveGame(saveGameNumber)
+    if g_server then
+        restartApplication(" -autoStartSavegameId " .. saveGameNumber)
     end
 end
 
@@ -359,6 +383,7 @@ WoodSellStationPlaceable.sellWood = Utils.overwrittenFunction(WoodSellStationPla
 Server.sendObjects = Utils.prependedFunction(Server.sendObjects, LimitedDailyIncome.sendObjects)
 
 BaseMission.loadMapFinished = Utils.appendedFunction(BaseMission.loadMapFinished, LimitedDailyIncome.loadMapFinished)
+addModEventListener(LimitedDailyIncome)
 
 if LimitedDailyIncome.isDevelopmentVersion then
     LimitedDailyIncome:addConsoleCommands()

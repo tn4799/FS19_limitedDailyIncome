@@ -310,19 +310,36 @@ function LimitedDailyIncome:handleDischarge(superFunc, dischargeNode, discharged
     end
 end
 
+LimitedDailyIncome.printedTable = false
+
 function LimitedDailyIncome:draw()
-    local posX, posY = 0.088, 0.08
-    local width, height = 0.2, 0.14
-    local sizeHeader = 0.020
+    local gameInfoDisplay = g_currentMission.hud.gameInfoDisplay
+    local hudTimeBox = gameInfoDisplay.timeBox
+    local hudMoneyBox = gameInfoDisplay.moneyBox
+    local hudWeatherBox = gameInfoDisplay.weatherBox
+    
+    local posX, posY = hudTimeBox:getPosition()
+    local width, height = getNormalizedScreenValues(unpack(gameInfoDisplay.SIZE.SELF))
+    local widthSep, heightSep = gameInfoDisplay:scalePixelToScreenVector(GameInfoDisplay.SIZE.SEPARATOR)
+    widthSep = math.max(widthSep, 1 / g_screenWidth)
+    width = hudMoneyBox:getWidth() + hudTimeBox:getWidth() + widthSep
+
+    local textPosX = posX + 0.005
+    local sizeHeader = gameInfoDisplay.moneyTextSize
+    local moneyUnit = gameInfoDisplay.moneyUnit
+    local salesText, salesLimitText = "", ""
+
+    local farmId = g_currentMission.player.farmId
 
     --TODO: adjust values and maybe add calculation for size of ui
     setOverlayColor(LimitedDailyIncome.OVERLAY, 1.0, 1.0, 1.0, 1.0)
-    renderOverlay(LimitedDailyIncome.OVERLAY, posX - 0.008, posY - 0.08, width, height)
+    renderOverlay(LimitedDailyIncome.OVERLAY, posX, posY - height - 0.003, width, height)
     setTextColor(1,1,1,1)
     setTextAlignment(RenderText.ALIGN_LEFT)
 
     setTextBold(false)
-    renderText(posX, posY - 0.03, sizeHeader, "Testgui ist schon ein echt bescheuerter Titel einfach nur zum testen was passiert wenn der text extrem lang ist.")
+    renderText(textPosX, posY - sizeHeader - 0.003, sizeHeader, "Sales: " .. LimitedDailyIncome.sales[farmId])
+    renderText(textPosX, posY - sizeHeader*2 - 0.003, sizeHeader, "SalesLimit: " .. LimitedDailyIncome.salesLimit[farmId])
 end
 
 function LimitedDailyIncome:showErrorDialog(errorMessage)
@@ -342,6 +359,7 @@ function LimitedDailyIncome:addConsoleCommands()
     addConsoleCommand("ldiPrintFarmData", "Prints the sales and salesLimit of the farm", "printDataFromFarm", LimitedDailyIncome)
     addConsoleCommand("ldiPrintAll", "Prints the whole content of sales and salesLimit.", "printAllData", LimitedDailyIncome)
     addConsoleCommand("restartSavegame", "load and start a savegame", "restartSaveGame", LimitedDailyIncome)
+    addConsoleCommand("printGUITable", "prints the content of a table in g_gui", "printGUITable", LimitedDailyIncome)
 end
 
 -- functions for console commands
@@ -362,6 +380,16 @@ end
 function LimitedDailyIncome:restartSaveGame(saveGameNumber)
     if g_server then
         restartApplication(" -autoStartSavegameId " .. saveGameNumber)
+    end
+end
+
+function LimitedDailyIncome:printGUITable(key)
+    if type(g_gui[key]) ~= "table" then
+        print("value: " .. tostring(g_gui[key]))
+        return
+    end
+    for k,v in pairs(g_gui[key]) do
+        print("key: " .. tostring(k) .. "    value: " .. tostring(v))
     end
 end
 

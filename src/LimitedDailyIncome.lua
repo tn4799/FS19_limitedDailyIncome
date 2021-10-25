@@ -310,9 +310,11 @@ function LimitedDailyIncome:handleDischarge(superFunc, dischargeNode, discharged
     end
 end
 
-LimitedDailyIncome.printedTable = false
-
 function LimitedDailyIncome:draw()
+    if not g_currentMission.hud:getIsVisible() then
+        return
+    end
+
     local gameInfoDisplay = g_currentMission.hud.gameInfoDisplay
     local hudTimeBox = gameInfoDisplay.timeBox
     local hudMoneyBox = gameInfoDisplay.moneyBox
@@ -322,24 +324,33 @@ function LimitedDailyIncome:draw()
     local width, height = getNormalizedScreenValues(unpack(gameInfoDisplay.SIZE.SELF))
     local widthSep, heightSep = gameInfoDisplay:scalePixelToScreenVector(GameInfoDisplay.SIZE.SEPARATOR)
     widthSep = math.max(widthSep, 1 / g_screenWidth)
-    width = hudMoneyBox:getWidth() + hudTimeBox:getWidth() + widthSep
+    width = hudMoneyBox:getWidth() + hudTimeBox:getWidth() + 30 * widthSep
 
     local textPosX = posX + 0.005
     local sizeHeader = gameInfoDisplay.moneyTextSize
     local moneyUnit = gameInfoDisplay.moneyUnit
-    local salesText, salesLimitText = "", ""
+    local currencyIcon = ""
 
+    if moneyUnit == GS_MONEY_EURO then
+        currencyIcon = "€"
+    elseif moneyUnit == GS_MONEY_POUND then
+        currencyIcon = "£"
+    else 
+        currencyIcon = "$"
+    end
     local farmId = g_currentMission.player.farmId
+    local salesText = string.format(g_i18n:getText("SALES_DISPLAY"), math.floor(LimitedDailyIncome.sales[farmId]), currencyIcon)
+    local salesLimitText = string.format(g_i18n:getText("SALES_LIMIT_DISPLAY"), LimitedDailyIncome.salesLimit[farmId], currencyIcon)
 
-    --TODO: adjust values and maybe add calculation for size of ui
+    --TODO: maybe add calculation for dynamicly adjustung size of ui
     setOverlayColor(LimitedDailyIncome.OVERLAY, 1.0, 1.0, 1.0, 1.0)
     renderOverlay(LimitedDailyIncome.OVERLAY, posX, posY - height - 0.003, width, height)
     setTextColor(1,1,1,1)
     setTextAlignment(RenderText.ALIGN_LEFT)
 
     setTextBold(false)
-    renderText(textPosX, posY - sizeHeader - 0.003, sizeHeader, "Sales: " .. LimitedDailyIncome.sales[farmId])
-    renderText(textPosX, posY - sizeHeader*2 - 0.003, sizeHeader, "SalesLimit: " .. LimitedDailyIncome.salesLimit[farmId])
+    renderText(textPosX, posY - sizeHeader - 0.003, sizeHeader, salesText)
+    renderText(textPosX, posY - sizeHeader*2 - 0.003, sizeHeader, salesLimitText)
 end
 
 function LimitedDailyIncome:showErrorDialog(errorMessage)
@@ -360,6 +371,8 @@ function LimitedDailyIncome:addConsoleCommands()
     addConsoleCommand("ldiPrintAll", "Prints the whole content of sales and salesLimit.", "printAllData", LimitedDailyIncome)
     addConsoleCommand("restartSavegame", "load and start a savegame", "restartSaveGame", LimitedDailyIncome)
     addConsoleCommand("printGUITable", "prints the content of a table in g_gui", "printGUITable", LimitedDailyIncome)
+    addConsoleCommand("printHUDTable", "prints the content of the table g_currentMission.hud", "printHUDTable", LimitedDailyIncome)
+    addConsoleCommand("setSeperatorWidthFactor", "Sets the factor that increases the width of the seperator", "setSeperatorWidthFactor", LimitedDailyIncome)
 end
 
 -- functions for console commands
@@ -391,6 +404,16 @@ function LimitedDailyIncome:printGUITable(key)
     for k,v in pairs(g_gui[key]) do
         print("key: " .. tostring(k) .. "    value: " .. tostring(v))
     end
+end
+
+function LimitedDailyIncome:printHUDTable()
+    for k,v in pairs(g_currentMission.hud) do
+        print("key: " .. tostring(k) .. "    value: " .. tostring(v))
+    end
+end
+
+function LimitedDailyIncome:setSeperatorWidthFactor(factor)
+    LimitedDailyIncome.factor = tonumber(factor)
 end
 
 FarmManager.saveToXMLFile = Utils.appendedFunction(FarmManager.saveToXMLFile, LimitedDailyIncome.saveToXMLFile)

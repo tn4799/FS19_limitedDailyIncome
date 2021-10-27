@@ -24,7 +24,10 @@ LimitedDailyIncome.SMALL_SALES_LIMIT = 30000
 -- Increase when player stays below the limit.
 LimitedDailyIncome.INCREASE_LIMIT_SMALL_SALES = 50000
 
-LimitedDailyIncome.OVERLAY = createImageOverlay(g_currentModDirectory .. "back.dds")
+LimitedDailyIncome.overlayPath = g_currentModDirectory .. "back.dds"
+LimitedDailyIncome.OVERLAY = createImageOverlay(LimitedDailyIncome.overlayPath)
+LimitedDailyIncome.salesLimitBox = nil
+LimitedDailyIncome.salesBox = nil
 
 function LimitedDailyIncome:loadMapFinished(node, arguments, callAsyncCallback)
     LimitedDailyIncome.staticValuesFilename = string.format(getUserProfileAppPath() .. "savegame%d/LimitedDailyIncome.xml", g_careerScreen.selectedIndex)
@@ -42,6 +45,8 @@ function LimitedDailyIncome:loadMapFinished(node, arguments, callAsyncCallback)
     g_messageCenter:subscribe(MessageType.FARM_CREATED, LimitedDailyIncome.onFarmCreated, LimitedDailyIncome)
     g_messageCenter:subscribe(MessageType.FARM_DELETED, LimitedDailyIncome.onFarmDeleted, LimitedDailyIncome)
     --g_messageCenter:subscribe(MessageType.PLAYER_FARM_CHANGED, LimitedDailyIncome.onPlayerFarmChanged, LimitedDailyIncome)
+
+    LimitedDailyIncome:createHUDComponents(g_baseHUDFilename, g_currentMission.hud.gameInfoDisplay)
 end
 
 function LimitedDailyIncome:loadFromXMLFile(xmlFilename)
@@ -319,8 +324,29 @@ function LimitedDailyIncome:draw()
     local hudTimeBox = gameInfoDisplay.timeBox
     local hudMoneyBox = gameInfoDisplay.moneyBox
     local hudWeatherBox = gameInfoDisplay.weatherBox
+
+    setTextBold(false)
+	setTextAlignment(RenderText.ALIGN_RIGHT)
+	setTextColor(unpack(gameInfoDisplay.COLOR.TEXT))
+
+    local textOffX, textOffY = gameInfoDisplay:scalePixelToScreenVector(gameInfoDisplay.POSITION.MONEY_TEXT)
+    local salesLimitBoxPosX, salesLimitBoxPosY = LimitedDailyIncome.salesLimitBox:getPosition()
+    local salesBoxPosX, salesBoxPosY = LimitedDailyIncome.salesBox:getPosition()
+    local salesLimitTextPositionX = salesLimitBoxPosX + LimitedDailyIncome.salesLimitBox:getWidth() + textOffX
+    local salesLimitTextPositionY = salesLimitBoxPosY + LimitedDailyIncome.salesLimitBox:getHeight() * 0.5 * textOffY
+    local salesTextPositionX = salesBoxPosX + LimitedDailyIncome.salesBox:getWidth() + textOffX
+    local salesTextPositionY = salesBoxPosY + LimitedDailyIncome.salesBox:getHeight() * 0.5 + textOffY
+
+    if g_currentMission.player ~= nil then
+		local farmId = g_currentMission.player.farmId
+		local salesLimitText = g_i18n:formatMoney(LimitedDailyIncome.salesLimit[farmId], 0, false, true)
+        local salesText = g_i18n:formatMoney(LimitedDailyIncome.sales[farmId], 0, false, true)
+
+		renderText(salesLimitTextPositionX, salesTextPositionY, gameInfoDisplay.moneyTextSize, salesLimitText)
+        renderText(salesTextPositionX, salesTextPositionY, gameInfoDisplay.moneyTextSize, salesText)
+	end
     
-    local posX, posY = hudTimeBox:getPosition()
+    --[[local posX, posY = hudTimeBox:getPosition()
     local width, height = getNormalizedScreenValues(unpack(gameInfoDisplay.SIZE.SELF))
     local widthSep, heightSep = gameInfoDisplay:scalePixelToScreenVector(GameInfoDisplay.SIZE.SEPARATOR)
     widthSep = math.max(widthSep, 1 / g_screenWidth)
@@ -350,7 +376,60 @@ function LimitedDailyIncome:draw()
 
     setTextBold(false)
     renderText(textPosX, posY - sizeHeader - 0.003, sizeHeader, salesText)
-    renderText(textPosX, posY - sizeHeader*2 - 0.003, sizeHeader, salesLimitText)
+    renderText(textPosX, posY - sizeHeader*2 - 0.003, sizeHeader, salesLimitText)]]
+end
+
+function LimitedDailyIncome:createHUDComponents(hudAtlasPath, gameInfoDisplay)
+    local topRightX, topRightY = GameInfoDisplay.getBackgroundPosition(1)
+    -- we want to position our HUD below the standard HUD. so we need to reduce the height of the topRight corner 2 times.
+    -- the last value is to create a little gap between our hud and the giants hud
+	local bottomY = topRightY - 2*gameInfoDisplay:getHeight() - 0.003
+    local marginWidth, marginHeight = gameInfoDisplay:scalePixelToScreenVector(GameInfoDisplay.SIZE.BOX_MARGIN)
+	local rightX, salesLimitBox = LimitedDailyIncome:createBox(hudAtlasPath, topRightX, bottomY, gameInfoDisplay, false)
+    LimitedDailyIncome.salesLimitBox = salesLimitBox
+    local sepX = rightX - marginWidth
+    rightX, LimitedDailyIncome.salesBox = LimitedDailyIncome:createBox(hudAtlasPath, rightX - marginWidth, bottomY, gameInfoDisplay, true)
+    rightX = rightX - marginWidth
+    local centerY = bottomY + gameInfoDisplay:getHeight() * 0.5
+	local separator = gameInfoDisplay:createVerticalSeparator(hudAtlasPath, sepX, centerY)
+    LimitedDailyIncome.salesBox:addChild(separator)
+
+    local posX, posY = LimitedDailyIncome.salesBox:getPosition()
+    local widthBackground = -marginWidth 
+                    + LimitedDailyIncome.salesBox:getWidth() + marginWidth * 2 
+                    + LimitedDailyIncome.salesLimitBox:getWidth() + marginWidth * 2
+    local backgroundOverlay = Overlay:new(LimitedDailyIncome.overlayPath, posX, posY, widthBackground, gameInfoDisplay:getHeight())
+    local backgroundElement = HUDElement:new(backgroundOverlay)
+    backgroundElement:addChild(LimitedDailyIncome.salesLimitBox)
+    backgroundElement:addChild(LimitedDailyIncome.salesBox)
+    
+    gameInfoDisplay:addChild(backgroundElement)
+end
+
+function LimitedDailyIncome:createBox(hudAtlasPath, rightX, bottomY, gameInfoDisplay, withIcon)
+    local iconWidth, iconHeight = gameInfoDisplay:scalePixelToScreenVector(gameInfoDisplay.SIZE.MONEY_ICON)
+    local boxWidth, boxHeight = gameInfoDisplay:scalePixelToScreenVector(gameInfoDisplay.SIZE.MONEY_BOX)
+    if not withIcon then
+        boxWidth = boxWidth - iconWidth
+        boxHeight = boxHeight - iconHeight
+    end
+	local posX = rightX - boxWidth
+	local posY = bottomY + boxHeight * 0.5
+	local boxOverlay = Overlay:new(nil, posX, bottomY, boxWidth, boxHeight)
+	local boxElement = HUDElement:new(boxOverlay)
+    
+    if withIcon then
+        posY = bottomY + (boxHeight - iconHeight) * 0.5
+
+        local iconOverlay = Overlay:new(hudAtlasPath, posX, posY, iconWidth, iconHeight)
+
+        iconOverlay:setUVs(getNormalizedUVs(gameInfoDisplay.UV.MONEY_ICON[gameInfoDisplay.moneyUnit]))
+        iconOverlay:setColor(unpack(gameInfoDisplay.COLOR.ICON))
+
+        boxElement:addChild(HUDElement:new(iconOverlay))
+    end
+
+    return posX, boxElement
 end
 
 function LimitedDailyIncome:showErrorDialog(errorMessage)
@@ -372,7 +451,6 @@ function LimitedDailyIncome:addConsoleCommands()
     addConsoleCommand("restartSavegame", "load and start a savegame", "restartSaveGame", LimitedDailyIncome)
     addConsoleCommand("printGUITable", "prints the content of a table in g_gui", "printGUITable", LimitedDailyIncome)
     addConsoleCommand("printHUDTable", "prints the content of the table g_currentMission.hud", "printHUDTable", LimitedDailyIncome)
-    addConsoleCommand("setSeperatorWidthFactor", "Sets the factor that increases the width of the seperator", "setSeperatorWidthFactor", LimitedDailyIncome)
 end
 
 -- functions for console commands
@@ -410,10 +488,6 @@ function LimitedDailyIncome:printHUDTable()
     for k,v in pairs(g_currentMission.hud) do
         print("key: " .. tostring(k) .. "    value: " .. tostring(v))
     end
-end
-
-function LimitedDailyIncome:setSeperatorWidthFactor(factor)
-    LimitedDailyIncome.factor = tonumber(factor)
 end
 
 FarmManager.saveToXMLFile = Utils.appendedFunction(FarmManager.saveToXMLFile, LimitedDailyIncome.saveToXMLFile)

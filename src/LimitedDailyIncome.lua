@@ -345,38 +345,6 @@ function LimitedDailyIncome:draw()
 		renderText(salesLimitTextPositionX, salesTextPositionY, gameInfoDisplay.moneyTextSize, salesLimitText)
         renderText(salesTextPositionX, salesTextPositionY, gameInfoDisplay.moneyTextSize, salesText)
 	end
-    
-    --[[local posX, posY = hudTimeBox:getPosition()
-    local width, height = getNormalizedScreenValues(unpack(gameInfoDisplay.SIZE.SELF))
-    local widthSep, heightSep = gameInfoDisplay:scalePixelToScreenVector(GameInfoDisplay.SIZE.SEPARATOR)
-    widthSep = math.max(widthSep, 1 / g_screenWidth)
-    width = hudMoneyBox:getWidth() + hudTimeBox:getWidth() + 30 * widthSep
-
-    local textPosX = posX + 0.005
-    local sizeHeader = gameInfoDisplay.moneyTextSize
-    local moneyUnit = gameInfoDisplay.moneyUnit
-    local currencyIcon = ""
-
-    if moneyUnit == GS_MONEY_EURO then
-        currencyIcon = "€"
-    elseif moneyUnit == GS_MONEY_POUND then
-        currencyIcon = "£"
-    else 
-        currencyIcon = "$"
-    end
-    local farmId = g_currentMission.player.farmId
-    local salesText = string.format(g_i18n:getText("SALES_DISPLAY"), math.floor(LimitedDailyIncome.sales[farmId]), currencyIcon)
-    local salesLimitText = string.format(g_i18n:getText("SALES_LIMIT_DISPLAY"), LimitedDailyIncome.salesLimit[farmId], currencyIcon)
-
-    --TODO: maybe add calculation for dynamicly adjustung size of ui
-    setOverlayColor(LimitedDailyIncome.OVERLAY, 1.0, 1.0, 1.0, 1.0)
-    renderOverlay(LimitedDailyIncome.OVERLAY, posX, posY - height - 0.003, width, height)
-    setTextColor(1,1,1,1)
-    setTextAlignment(RenderText.ALIGN_LEFT)
-
-    setTextBold(false)
-    renderText(textPosX, posY - sizeHeader - 0.003, sizeHeader, salesText)
-    renderText(textPosX, posY - sizeHeader*2 - 0.003, sizeHeader, salesLimitText)]]
 end
 
 function LimitedDailyIncome:createHUDComponents(hudAtlasPath, gameInfoDisplay)

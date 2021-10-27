@@ -415,10 +415,11 @@ end
 function LimitedDailyIncome:addConsoleCommands()
     addConsoleCommand("ldiPrintFarmData", "Prints the sales and salesLimit of the farm", "printDataFromFarm", LimitedDailyIncome)
     addConsoleCommand("ldiPrintAll", "Prints the whole content of sales and salesLimit.", "printAllData", LimitedDailyIncome)
+    addConsoleCommand("ldiSetSalesForFarm", "set the current sales of the farm with the farmId to the chosen value", "setSalesForFarm", LimitedDailyIncome)
+    addConsoleCommand("ldiSetSalesLimitForFarm", "set the current sales limit of the farm with the farmId to the entered value", "setSalesLimitForFarm", LimitedDailyIncome)
     addConsoleCommand("restartSavegame", "load and start a savegame", "restartSaveGame", LimitedDailyIncome)
     addConsoleCommand("printGUITable", "prints the content of a table in g_gui", "printGUITable", LimitedDailyIncome)
     addConsoleCommand("printHUDTable", "prints the content of the table g_currentMission.hud", "printHUDTable", LimitedDailyIncome)
-    
 end
 
 -- functions for console commands
@@ -456,6 +457,20 @@ function LimitedDailyIncome:printHUDTable()
     for k,v in pairs(g_currentMission.hud) do
         print("key: " .. tostring(k) .. "    value: " .. tostring(v))
     end
+end
+
+function LimitedDailyIncome:setSalesLimitForFarm(farmId, salesLimit)
+    farmId = tonumber(farmId)
+    salesLimit = tonumber(salesLimit)
+
+    LimitedDailyIncome.salesLimit[farmId] = salesLimit
+end
+
+function LimitedDailyIncome:setSalesForFarm(farmId, sales)
+    farmId = tonumber(farmId)
+    sales = tonumber(sales)
+
+    LimitedDailyIncome.sales[farmId] = sales
 end
 
 FarmManager.saveToXMLFile = Utils.appendedFunction(FarmManager.saveToXMLFile, LimitedDailyIncome.saveToXMLFile)

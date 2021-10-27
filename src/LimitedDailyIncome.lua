@@ -25,9 +25,9 @@ LimitedDailyIncome.SMALL_SALES_LIMIT = 30000
 LimitedDailyIncome.INCREASE_LIMIT_SMALL_SALES = 50000
 
 LimitedDailyIncome.overlayPath = g_currentModDirectory .. "back.dds"
-LimitedDailyIncome.OVERLAY = createImageOverlay(LimitedDailyIncome.overlayPath)
 LimitedDailyIncome.salesLimitBox = nil
 LimitedDailyIncome.salesBox = nil
+LimitedDailyIncome.moneyIconOverlay = nil
 
 function LimitedDailyIncome:loadMapFinished(node, arguments, callAsyncCallback)
     LimitedDailyIncome.staticValuesFilename = string.format(getUserProfileAppPath() .. "savegame%d/LimitedDailyIncome.xml", g_careerScreen.selectedIndex)
@@ -321,9 +321,6 @@ function LimitedDailyIncome:draw()
     end
 
     local gameInfoDisplay = g_currentMission.hud.gameInfoDisplay
-    local hudTimeBox = gameInfoDisplay.timeBox
-    local hudMoneyBox = gameInfoDisplay.moneyBox
-    local hudWeatherBox = gameInfoDisplay.weatherBox
 
     setTextBold(false)
 	setTextAlignment(RenderText.ALIGN_RIGHT)
@@ -333,18 +330,19 @@ function LimitedDailyIncome:draw()
     local salesLimitBoxPosX, salesLimitBoxPosY = LimitedDailyIncome.salesLimitBox:getPosition()
     local salesBoxPosX, salesBoxPosY = LimitedDailyIncome.salesBox:getPosition()
     local salesLimitTextPositionX = salesLimitBoxPosX + LimitedDailyIncome.salesLimitBox:getWidth() + textOffX
-    local salesLimitTextPositionY = salesLimitBoxPosY + LimitedDailyIncome.salesLimitBox:getHeight() * 0.5 * textOffY
-    local salesTextPositionX = salesBoxPosX + LimitedDailyIncome.salesBox:getWidth() + textOffX
-    local salesTextPositionY = salesBoxPosY + LimitedDailyIncome.salesBox:getHeight() * 0.5 + textOffY
+    local salesTextPositionX = salesBoxPosX + LimitedDailyIncome.salesBox:getWidth() + textOffX - 0.005
+    local textPositionY = salesBoxPosY + LimitedDailyIncome.salesBox:getHeight() * 0.5 + textOffY
 
     if g_currentMission.player ~= nil then
 		local farmId = g_currentMission.player.farmId
 		local salesLimitText = g_i18n:formatMoney(LimitedDailyIncome.salesLimit[farmId], 0, false, true)
         local salesText = g_i18n:formatMoney(LimitedDailyIncome.sales[farmId], 0, false, true)
 
-		renderText(salesLimitTextPositionX, salesTextPositionY, gameInfoDisplay.moneyTextSize, salesLimitText)
-        renderText(salesTextPositionX, salesTextPositionY, gameInfoDisplay.moneyTextSize, salesText)
+		renderText(salesLimitTextPositionX, textPositionY, gameInfoDisplay.moneyTextSize, salesLimitText)
+        renderText(salesTextPositionX, textPositionY, gameInfoDisplay.moneyTextSize, salesText)
 	end
+
+    LimitedDailyIncome.moneyIconOverlay:setUVs(getNormalizedUVs(gameInfoDisplay.UV.MONEY_ICON[gameInfoDisplay.moneyUnit]))
 end
 
 function LimitedDailyIncome:createHUDComponents(hudAtlasPath, gameInfoDisplay)
@@ -364,8 +362,8 @@ function LimitedDailyIncome:createHUDComponents(hudAtlasPath, gameInfoDisplay)
 
     local posX, posY = LimitedDailyIncome.salesBox:getPosition()
     local widthBackground = -marginWidth 
-                    + LimitedDailyIncome.salesBox:getWidth() + marginWidth * 2 
-                    + LimitedDailyIncome.salesLimitBox:getWidth() + marginWidth * 2
+                    + LimitedDailyIncome.salesBox:getWidth() + marginWidth * 2
+                    + LimitedDailyIncome.salesLimitBox:getWidth() + marginWidth
     local backgroundOverlay = Overlay:new(LimitedDailyIncome.overlayPath, posX, posY, widthBackground, gameInfoDisplay:getHeight())
     local backgroundElement = HUDElement:new(backgroundOverlay)
     backgroundElement:addChild(LimitedDailyIncome.salesLimitBox)
@@ -393,6 +391,7 @@ function LimitedDailyIncome:createBox(hudAtlasPath, rightX, bottomY, gameInfoDis
 
         iconOverlay:setUVs(getNormalizedUVs(gameInfoDisplay.UV.MONEY_ICON[gameInfoDisplay.moneyUnit]))
         iconOverlay:setColor(unpack(gameInfoDisplay.COLOR.ICON))
+        LimitedDailyIncome.moneyIconOverlay = iconOverlay
 
         boxElement:addChild(HUDElement:new(iconOverlay))
     end
@@ -419,6 +418,7 @@ function LimitedDailyIncome:addConsoleCommands()
     addConsoleCommand("restartSavegame", "load and start a savegame", "restartSaveGame", LimitedDailyIncome)
     addConsoleCommand("printGUITable", "prints the content of a table in g_gui", "printGUITable", LimitedDailyIncome)
     addConsoleCommand("printHUDTable", "prints the content of the table g_currentMission.hud", "printHUDTable", LimitedDailyIncome)
+    
 end
 
 -- functions for console commands

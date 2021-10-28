@@ -4,17 +4,12 @@
     <version>1.0.0.0</version>
     <title>
         <en>Limited Daily Income</en>
-        <de>Begrenztes Tägliches Einkommen</de>
+        <de>Tägliche Einkommensbegrenzung</de>
     </title>
 
     <description>
         <en>
 <![CDATA[
-<<<<<<< Updated upstream
-Bla
-]]>
-        </en>
-=======
 This mod allows you to limit the income for all farms to a certain daily limit.
 
 What exactly can this mod do?
@@ -93,7 +88,6 @@ Durch das Limit werden Spieler mit viel Zeit in ihrem finanziellem Vorranschreit
 durch die Erhöhung des Limits, bei gar keinem oder wenig Gewinn ist es für Spieler mit weniger Zeit möglich, zu den anderen Spielern aufzuholen.
 ]]>
 		</de>
->>>>>>> Stashed changes
     </description>
     <iconFilename>modIcon.dds</iconFilename>
     <multiplayer supported="true"/>

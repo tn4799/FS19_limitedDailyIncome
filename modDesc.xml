@@ -4,15 +4,20 @@
     <version>1.0.0.0</version>
     <title>
         <en>Limited Daily Income</en>
-        <de>Tägliche Einkommensbegrenzung</de>
+        <de>Begrenztes Tägliches Einkommen</de>
     </title>
 
     <description>
         <en>
 <![CDATA[
+<<<<<<< Updated upstream
+Bla
+]]>
+        </en>
+=======
 This mod allows you to limit the income for all farms to a certain daily limit.
 
-What exactly can the mod?
+What exactly can this mod do?
 
 - Set a limit per day
 - An increase of the limit if a farm has earned no money at all on a day
@@ -29,10 +34,10 @@ What counts as income?
 
 What can I not do once I reach my limit ?
 
-- Not accept any missions that day
-- Not sell crops, bales or animal products
-- Do not sell wood
-- Do not sell animals
+- Accept any missions on that day
+- Selling crops, bales or animal products
+- Selling wood
+- Selling animals
 
 Can I still sell vehicles and equipment and trade with other players ?
 
@@ -52,11 +57,11 @@ by increasing the limit, with no or little profit, it is possible for players wi
 <![CDATA[
 Mit dieser Mod lässt sich das Einkommen für alle Farmen auf ein bestimmtes Tageslimit begrenzen.
 
-Was genau kann der Mod?
+Was genau kann die Mod?
 
 - Ein Limit pro Tag setzen
 - Eine Erhöhung des Limits, wenn eine Farm an einem Tag gar kein Geld verdient hat
-- Eine kleinere Erhöhung des Limits, wenn eine Farm an einem Tag nur wenig Geld verdient wurde
+- Eine kleinere Erhöhung des Limits, wenn eine Farm an einem Tag nur wenig Geld verdient hat
 - Alle Limits sind in der DailyLimitIncome.xml Datei im Savegame einstellbar.
 WICHTIG: Alle erhöhten Limits werden wieder auf das Standardlimit zurückgesetzt sobald man an einem Tag wieder viel Geld verdient hat!
 
@@ -88,6 +93,7 @@ Durch das Limit werden Spieler mit viel Zeit in ihrem finanziellem Vorranschreit
 durch die Erhöhung des Limits, bei gar keinem oder wenig Gewinn ist es für Spieler mit weniger Zeit möglich, zu den anderen Spielern aufzuholen.
 ]]>
 		</de>
+>>>>>>> Stashed changes
     </description>
     <iconFilename>modIcon.dds</iconFilename>
     <multiplayer supported="true"/>
@@ -95,5 +101,5 @@ durch die Erhöhung des Limits, bei gar keinem oder wenig Gewinn ist es für Spi
         <sourceFile filename="src/LimitedDailyIncome.lua"/>
     </extraSourceFiles>
 
-    <l10n filenamePrefix="translations/l10n"/>
+    <!--l10 filenamePrefix="translations/l10n"/-->
 </modDesc>

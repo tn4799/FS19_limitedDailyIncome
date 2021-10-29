@@ -181,11 +181,9 @@ function LimitedDailyIncome:onFarmCreated(farmId)
     LimitedDailyIncome.sales[farmId] = 0
     LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.STANDARD_LIMIT
 
-    if g_currentMission:getIsServer() then
-        local sales = LimitedDailyIncome.sales[farmId]
-        local salesLimit = LimitedDailyIncome.salesLimit[farmId]
-        g_server:broadcastEvent(UpdateDataEvent:new(farmId, sales, salesLimit))
-    end
+    local sales = LimitedDailyIncome.sales[farmId]
+    local salesLimit = LimitedDailyIncome.salesLimit[farmId]
+    g_server:broadcastEvent(UpdateDataEvent:new(farmId, sales, salesLimit))
 end
 
 --remove farm if deleted

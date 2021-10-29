@@ -12,7 +12,7 @@
 <![CDATA[
 This mod allows you to limit the income for all farms to a certain daily limit.
 
-What exactly can the mod?
+What exactly can this mod do?
 
 - Set a limit per day
 - An increase of the limit if a farm has earned no money at all on a day
@@ -25,14 +25,14 @@ What counts as income?
 - Reward for missions
 - Selling crops, bales and animal products
 - Selling wood
-- Selling animals, although it's still possible to sell animals, but not for profit
+- Selling animals
 
 What can I not do once I reach my limit ?
 
-- Not accept any missions that day
-- Not sell crops, bales or animal products
-- Do not sell wood
-- Do not sell animals
+- Accept any missions on that day
+- Nell crops, bales or animal products
+- Sell wood
+- Sell animals, although it's still possible to sell animals, but not for profit
 
 Can I still sell vehicles and equipment and trade with other players ?
 
@@ -55,11 +55,11 @@ Also if you post any issues also please send your log.txt file too.
 <![CDATA[
 Mit dieser Mod lässt sich das Einkommen für alle Farmen auf ein bestimmtes Tageslimit begrenzen.
 
-Was genau kann der Mod?
+Was genau kann die Mod?
 
 - Ein Limit pro Tag setzen
 - Eine Erhöhung des Limits, wenn eine Farm an einem Tag gar kein Geld verdient hat
-- Eine kleinere Erhöhung des Limits, wenn eine Farm an einem Tag nur wenig Geld verdient wurde
+- Eine kleinere Erhöhung des Limits, wenn eine Farm an einem Tag nur wenig Geld verdient hat
 - Alle Limits sind in der DailyLimitIncome.xml Datei im Savegame einstellbar.
 WICHTIG: Alle erhöhten Limits werden wieder auf das Standardlimit zurückgesetzt sobald man an einem Tag wieder viel Geld verdient hat!
 
@@ -68,14 +68,14 @@ Was zählt zu den Einnahmen?
 - Entlohnung von Missionen
 - Verkauf von Ernte, Ballen und Tierprodukten
 - Verkauf von Holz
-- Verkauf von Tieren, wobei es weiterhin möglich ist Tiere zu verkaufen, aber nicht gewinnbringend
+- Verkauf von Tieren
 
 Was kann ich nicht mehr machen, wenn ich mein Limit erreicht habe ?
 
-- Keine Missionen an diesem Tag annehmen
+- Keine Missionen mehr an diesem Tag annehmen
 - Keine Ernte, Ballen oder Tierprodukte verkaufen
 - Kein Holz verkaufen
-- Keine Tiere verkaufen
+- Keine Tiere verkaufen, wobei es weiterhin möglich ist Tiere zu verkaufen, aber nicht gewinnbringend
 
 Kann ich weiterhin Fahrzeuge und Geräte verkaufen und mit anderen Spielern handeln ?
 

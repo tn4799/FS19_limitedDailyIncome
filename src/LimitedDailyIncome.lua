@@ -2,7 +2,7 @@ source(g_currentModDirectory .. "src/events/UpdateDataEvent.lua")
 
 LimitedDailyIncome = {}
 
-LimitedDailyIncome.isDevelopmentVersion = true
+LimitedDailyIncome.isDevelopmentVersion = false
 
 LimitedDailyIncome.sales = {}
 LimitedDailyIncome.salesLimit = {}

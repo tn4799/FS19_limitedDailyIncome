@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <l10n>
-	<elements>
-		<e k="LIMIT_REACHED_WOOD" 		v="You can't sell any more Wood. Daily sell limit reached." />
-		<e k="LIMIT_REACHED_MISSION" 	v="You can't accept another Mission. Daily sell limit reached." />
-		<e k="LIMIT_REACHED_FRUIT" 		v="You can't sell any more yield. Daily sell limit reached." />
-		<e k="LIMIT_REACHED_ANIMAL" 	v="You can't sell any more Animals. Daily sell limit reached." />
-		<e k="SALES_DISPLAY"			v="Today's income: %d %s"/>
-		<e k="SALES_LIMIT_DISPLAY"		v="Current Limit: %d %s"/>
-	</elements>
+	<texts>
+		<text name="LIMIT_REACHED_WOOD" 		text="You can't sell any more Wood. Daily sell limit reached." />
+		<text name="LIMIT_REACHED_MISSION" 		text="You can't accept another Mission. Daily sell limit reached." />
+		<text name="LIMIT_REACHED_FRUIT" 		text="You can't sell any more yield. Daily sell limit reached." />
+		<text name="LIMIT_REACHED_ANIMAL" 		text="You can't sell any more Animals. Daily sell limit reached." />
+		<text name="SALES_DISPLAY"				text="Today's income: %d %s"/>
+		<text name="SALES_LIMIT_DISPLAY"		text="Current Limit: %d %s"/>
+	</texts>
 </l10n>

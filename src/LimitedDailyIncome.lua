@@ -174,7 +174,7 @@ function LimitedDailyIncome:onFarmCreated(farmId)
         return
     end
 
-    if g_currentMission:getIsClient() then
+    if not g_currentMission:getIsServer() then
         return
     end
 

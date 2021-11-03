@@ -28,6 +28,7 @@ LimitedDailyIncome.overlayPath = g_currentModDirectory .. "back.dds"
 LimitedDailyIncome.salesLimitBox = nil
 LimitedDailyIncome.salesBox = nil
 LimitedDailyIncome.moneyIconOverlay = nil
+LimitedDailyIncome.backgroundElement = nil
 
 function LimitedDailyIncome:loadMapFinished(node, arguments, callAsyncCallback)
     LimitedDailyIncome.staticValuesFilename = string.format(getUserProfileAppPath() .. "savegame%d/LimitedDailyIncome.xml", g_careerScreen.selectedIndex)
@@ -319,6 +320,13 @@ function LimitedDailyIncome:draw()
     end
 
     local gameInfoDisplay = g_currentMission.hud.gameInfoDisplay
+    
+    if g_currentMission.player ~= nil and g_currentMission.player.farmId == g_farmManager.SPECTATOR_FARM_ID then 
+        LimitedDailyIncome.backgroundElement:setVisible(false)
+        return
+    end
+
+    LimitedDailyIncome.backgroundElement:setVisible(true)
 
     setTextBold(false)
 	setTextAlignment(RenderText.ALIGN_RIGHT)
@@ -333,7 +341,7 @@ function LimitedDailyIncome:draw()
 
     if g_currentMission.player ~= nil then
 		local farmId = g_currentMission.player.farmId
-		local salesLimitText = g_i18n:formatMoney(LimitedDailyIncome.salesLimit[farmId], 0, false, true)
+        local salesLimitText = g_i18n:formatMoney(LimitedDailyIncome.salesLimit[farmId], 0, false, true)
         local salesText = g_i18n:formatMoney(LimitedDailyIncome.sales[farmId], 0, false, true)
 
 		renderText(salesLimitTextPositionX, textPositionY, gameInfoDisplay.moneyTextSize, salesLimitText)
@@ -368,6 +376,7 @@ function LimitedDailyIncome:createHUDComponents(hudAtlasPath, gameInfoDisplay)
     backgroundElement:addChild(LimitedDailyIncome.salesBox)
     
     gameInfoDisplay:addChild(backgroundElement)
+    LimitedDailyIncome.backgroundElement = backgroundElement
 end
 
 function LimitedDailyIncome:createBox(hudAtlasPath, rightX, bottomY, gameInfoDisplay, withIcon)

@@ -17,7 +17,8 @@ What exactly can this mod do?
 - Set a limit per day
 - An increase of the limit if a farm has earned no money at all on a day
 - A smaller increase of the limit, if a farm has earned only little money on a day
-- All limits can be set in the DailyLimitIncome.xml file in the savegame.
+- All current limits of the farms are saved in the farms.xml in the current savegame.
+- All reset values for the limits can be set in the DailyLimitIncome.xml file in the savegame.
 IMPORTANT: All increased limits will be reset to the default limit as soon as you have earned a lot of money on a day!
 
 What counts as income?
@@ -60,7 +61,8 @@ Was genau kann die Mod?
 - Ein Limit pro Tag setzen
 - Eine Erhöhung des Limits, wenn eine Farm an einem Tag gar kein Geld verdient hat
 - Eine kleinere Erhöhung des Limits, wenn eine Farm an einem Tag nur wenig Geld verdient hat
-- Alle Limits sind in der DailyLimitIncome.xml Datei im Savegame einstellbar.
+- Die Limits für die einzelnen Farms sind in der farms.xml des Savegames gespeichert.
+- Alle Zuücksetzungswerte sind in der DailyLimitIncome.xml Datei im Savegame einstellbar.
 WICHTIG: Alle erhöhten Limits werden wieder auf das Standardlimit zurückgesetzt sobald man an einem Tag wieder viel Geld verdient hat!
 
 Was zählt zu den Einnahmen?

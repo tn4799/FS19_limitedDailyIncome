@@ -31,12 +31,12 @@ LimitedDailyIncome.moneyIconOverlay = nil
 LimitedDailyIncome.backgroundElement = nil
 
 function LimitedDailyIncome:loadMapFinished(node, arguments, callAsyncCallback)
-    LimitedDailyIncome.staticValuesFilename = string.format(getUserProfileAppPath() .. "savegame%d/LimitedDailyIncome.xml", g_careerScreen.selectedIndex)
+    LimitedDailyIncome.staticValuesFilename = string.format(getUserProfileAppPath() .. "savegame%d/LimitedDailyIncome.xml", g_currentMission.missionInfo.savegameIndex)
     if g_currentMission:getIsServer() then
-        g_currentMission.environment:addDayChangeListener(LimitedDailyIncome)
+        g_messageCenter:subscribe(MessageType.DAY_CHANGED, LimitedDailyIncome.dayChanged, LimitedDailyIncome)
     end
 
-    local vehicleTypes = g_vehicleTypeManager:getVehicleTypes()
+    local vehicleTypes = g_vehicleTypeManager:getTypes()
     for _, vehicleType in pairs(vehicleTypes) do
         if SpecializationUtil.hasSpecialization(Dischargeable, vehicleType.specializations) then
             SpecializationUtil.registerOverwrittenFunction(vehicleType, "handleDischarge", LimitedDailyIncome.handleDischarge)
@@ -47,7 +47,7 @@ function LimitedDailyIncome:loadMapFinished(node, arguments, callAsyncCallback)
     g_messageCenter:subscribe(MessageType.FARM_DELETED, LimitedDailyIncome.onFarmDeleted, LimitedDailyIncome)
     --g_messageCenter:subscribe(MessageType.PLAYER_FARM_CHANGED, LimitedDailyIncome.onPlayerFarmChanged, LimitedDailyIncome)
 
-    LimitedDailyIncome:createHUDComponents(g_baseHUDFilename, g_currentMission.hud.gameInfoDisplay)
+    --LimitedDailyIncome:createHUDComponents(g_baseHUDFilename, g_currentMission.hud.gameInfoDisplay)
 end
 
 function LimitedDailyIncome:loadFromXMLFile(xmlFilename)
@@ -59,11 +59,11 @@ function LimitedDailyIncome:loadFromXMLFile(xmlFilename)
         return
     end
 
-    local xmlFile = loadXMLFile("farmsXML", xmlFilename)
+    local xmlFile = XMLFile.load("TempXML", xmlFilename)
 
     local i = 0
     while true do
-        local key = string.format("farms.farm(%d)", i)
+        local key = string.format("farms.farm(%d).limitedDayIncome", i)
 
 		if not hasXMLProperty(xmlFile, key) then
 			break
@@ -72,14 +72,13 @@ function LimitedDailyIncome:loadFromXMLFile(xmlFilename)
         local farmId = getXMLInt(xmlFile, key .. "#farmId")
 
         -- added tag of limitedDayIncome to key
-        key = key .. ".limitedDayIncome"
-        LimitedDailyIncome.sales[farmId] = Utils.getNoNil(getXMLFloat(xmlFile, key .. ".sales"), 0)
-        LimitedDailyIncome.salesLimit[farmId] = Utils.getNoNil(getXMLInt(xmlFile, key .. ".salesLimit"), LimitedDailyIncome.STANDARD_LIMIT)
+        LimitedDailyIncome.sales[farmId] = Utils.getNoNil(xmlFile:getFloat(key .. ".sales"), 0)
+        LimitedDailyIncome.salesLimit[farmId] = Utils.getNoNil(xmlFile:getInt( key .. ".salesLimit"), LimitedDailyIncome.STANDARD_LIMIT)
 
         i = i + 1
     end
 
-    delete(xmlFile)
+    xmlFile:delete()
 
     if g_currentMission:getIsServer() then
         LimitedDailyIncome:loadStaticValues()
@@ -87,7 +86,8 @@ function LimitedDailyIncome:loadFromXMLFile(xmlFilename)
 end
 
 function LimitedDailyIncome:saveToXMLFile(xmlFilename)
-    local xmlFile = loadXMLFile("farmsXML", xmlFilename)
+    local xmlFile = XMLFile.load("TempXML", xmlFilename)
+
     local index = 0
     local farms = g_farmManager:getFarms()
 
@@ -96,17 +96,15 @@ function LimitedDailyIncome:saveToXMLFile(xmlFilename)
 			local key = string.format("farms.farm(%d).limitedDayIncome", index)
             local farmId = farm.farmId
 
-            setXMLFloat(xmlFile, key .. ".sales", LimitedDailyIncome.sales[farmId])
-            setXMLInt(xmlFile, key .. ".salesLimit", LimitedDailyIncome.salesLimit[farmId])
+            xmlFile:setFloat(key .. ".sales", LimitedDailyIncome.sales[farmId])
+            xmlFile:setInt(key .. ".salesLimit", LimitedDailyIncome.salesLimit[farmId])
 
 			index = index + 1
 		end
     end
 
-    index = 0
-
-    saveXMLFile(xmlFile)
-	delete(xmlFile)
+    xmlFile:save()
+	xmlFile:delete()
 
     if g_currentMission:getIsServer() then
         LimitedDailyIncome:saveStaticValues()
@@ -118,28 +116,32 @@ function LimitedDailyIncome:loadStaticValues()
         return
     end
 
-    local xmlFile = loadXMLFile("TempXML", LimitedDailyIncome.staticValuesFilename)
+    local xmlFile = XMLFile.load("TempXML", LimitedDailyIncome.staticValuesFilename)
     local key = "limitedDailyIncome"
 
-    LimitedDailyIncome.STANDARD_LIMIT = Utils.getNoNil(getXMLInt(xmlFile, key .. ".standardLimit"), LimitedDailyIncome.STANDARD_LIMIT)
-    LimitedDailyIncome.SMALL_SALES_LIMIT = Utils.getNoNil(getXMLInt(xmlFile, key .. ".smallSalesLimit"), LimitedDailyIncome.SMALL_SALES_LIMIT)
-    LimitedDailyIncome.INCREASE_LIMIT_NO_SALES = Utils.getNoNil(getXMLInt(xmlFile, key .. ".increaseLimitNoSales"), LimitedDailyIncome.INCREASE_LIMIT_NO_SALES)
-    LimitedDailyIncome.INCREASE_LIMIT_SMALL_SALES = Utils.getNoNil(getXMLInt(xmlFile, key .. ".increaseLimitSmallSales"), LimitedDailyIncome.INCREASE_LIMIT_SMALL_SALES)
+    LimitedDailyIncome.STANDARD_LIMIT = Utils.getNoNil(xmlFile:getInt(key .. ".standardLimit"), LimitedDailyIncome.STANDARD_LIMIT)
+    LimitedDailyIncome.SMALL_SALES_LIMIT = Utils.getNoNil(xmlFile:getInt(key .. ".smallSalesLimit"), LimitedDailyIncome.SMALL_SALES_LIMIT)
+    LimitedDailyIncome.INCREASE_LIMIT_NO_SALES = Utils.getNoNil(xmlFile:getInt(key .. ".increaseLimitNoSales"), LimitedDailyIncome.INCREASE_LIMIT_NO_SALES)
+    LimitedDailyIncome.INCREASE_LIMIT_SMALL_SALES = Utils.getNoNil(xmlFile:getInt(key .. ".increaseLimitSmallSales"), LimitedDailyIncome.INCREASE_LIMIT_SMALL_SALES)
 
-    delete(xmlFile)
+    xmlFile:delete()
 end
 
 function LimitedDailyIncome:saveStaticValues()
-    local xmlFile = createXMLFile("LimitedDailyIncomeXML", LimitedDailyIncome.staticValuesFilename, "limitedDailyIncome")
+    if LimitedDailyIncome.staticValuesFilename == nil then
+        return
+    end
+
+    local xmlFile = XMLFile.create("LimitedDailyIncomeXML", LimitedDailyIncome.staticValuesFilename, "limitedDailyIncome")
     local key = "limitedDailyIncome"
 
-    setXMLInt(xmlFile, key .. ".standardLimit", LimitedDailyIncome.STANDARD_LIMIT)
-    setXMLInt(xmlFile, key .. ".smallSalesLimit", LimitedDailyIncome.SMALL_SALES_LIMIT)
-    setXMLInt(xmlFile, key .. ".increaseLimitNoSales", LimitedDailyIncome.INCREASE_LIMIT_NO_SALES)
-    setXMLInt(xmlFile, key .. ".increaseLimitSmallSales", LimitedDailyIncome.INCREASE_LIMIT_SMALL_SALES)
+    xmlFile:setInt(key .. ".standardLimit", LimitedDailyIncome.STANDARD_LIMIT)
+    xmlFile:setInt(key .. ".smallSalesLimit", LimitedDailyIncome.SMALL_SALES_LIMIT)
+    xmlFile:setInt(key .. ".increaseLimitNoSales", LimitedDailyIncome.INCREASE_LIMIT_NO_SALES)
+    xmlFile:setInt(key .. ".increaseLimitSmallSales", LimitedDailyIncome.INCREASE_LIMIT_SMALL_SALES)
 
-    saveXMLFile(xmlFile)
-    delete(xmlFile)
+    xmlFile:save()
+    xmlFile:delete()
 end
 
 function LimitedDailyIncome:playerJoinedGame(uniqueUserId, userId, user, connection)
@@ -172,12 +174,15 @@ end
 --register new farm with default values
 function LimitedDailyIncome:onFarmCreated(farmId)
     if farmId == g_farmManager.SPECTATOR_FARM_ID then
+        print("spectator farm created")
         return
     end
 
     if not g_currentMission:getIsServer() then
+        print("not a server")
         return
     end
+    print("created farm with farmId " .. tostring(farmId))
 
     LimitedDailyIncome.sales[farmId] = 0
     LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.STANDARD_LIMIT
@@ -314,6 +319,7 @@ function LimitedDailyIncome:handleDischarge(superFunc, dischargeNode, discharged
     end
 end
 
+--[[
 function LimitedDailyIncome:draw()
     if not g_currentMission.hud:getIsVisible() then
         return
@@ -350,6 +356,7 @@ function LimitedDailyIncome:draw()
 
     LimitedDailyIncome.moneyIconOverlay:setUVs(getNormalizedUVs(gameInfoDisplay.UV.MONEY_ICON[gameInfoDisplay.moneyUnit]))
 end
+]]
 
 function LimitedDailyIncome:createHUDComponents(hudAtlasPath, gameInfoDisplay)
     local topRightX, topRightY = GameInfoDisplay.getBackgroundPosition(1)
@@ -489,11 +496,11 @@ FarmManager.playerJoinedGame = Utils.appendedFunction(FarmManager.playerJoinedGa
 -- permission managing
 -- overwritten is used because we do some code injection. This means we insert some code at the start of the original function
 MissionManager.startMission = Utils.overwrittenFunction(MissionManager.startMission, LimitedDailyIncome.startMission)
-DealerFarmStrategie.applyChanges = Utils.overwrittenFunction(DealerFarmStrategie.applyChanges, LimitedDailyIncome.applyChangesFarms)
-DealerTrailerStrategie.applyChanges = Utils.overwrittenFunction(DealerTrailerStrategie.applyChanges, LimitedDailyIncome.applyChangesTrailer)
+--DealerFarmStrategie.applyChanges = Utils.overwrittenFunction(DealerFarmStrategie.applyChanges, LimitedDailyIncome.applyChangesFarms)
+--DealerTrailerStrategie.applyChanges = Utils.overwrittenFunction(DealerTrailerStrategie.applyChanges, LimitedDailyIncome.applyChangesTrailer)
 SellingStation.addFillLevelFromTool = Utils.overwrittenFunction(SellingStation.addFillLevelFromTool, LimitedDailyIncome.addFillLevelFromTool)
 SellingStation.getIsFillAllowedFromFarm = Utils.overwrittenFunction(SellingStation.getIsFillAllowedFromFarm, LimitedDailyIncome.getIsFillAllowedFromFarm)
-WoodSellStationPlaceable.sellWood = Utils.overwrittenFunction(WoodSellStationPlaceable.sellWood, LimitedDailyIncome.sellWood)
+--WoodSellStationPlaceable.sellWood = Utils.overwrittenFunction(WoodSellStationPlaceable.sellWood, LimitedDailyIncome.sellWood)
 
 Server.sendObjects = Utils.prependedFunction(Server.sendObjects, LimitedDailyIncome.sendObjects)
 

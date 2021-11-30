@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
-<modDesc descVersion="53">
+<modDesc descVersion="61">
     <author>tn4799, Tensuko</author>
     <version>1.0.0.0</version>
     <title>
@@ -46,56 +46,45 @@ Imagine you have a 24/7 server where players run their farms.
 Some players have a lot of time and advance on the map accordingly fast.
 Others have only time to play 2-3 times a week, basicly not much time.
 Due to the limit, players with a lot of time are slowed down in their financial advancement and 
-by increasing the limit, with no or little profit, it is possible for players with less time to catch up with the other players.
-
-If you run into any kind of trouble or have an idea for new features please post then at https://github.com/tn4799/FS19_limitedDailyIncome/issues.
-Also if you post any issues also please send your log.txt file too.
-]]>
+by increasing the limit, with no or little profit, it is possible for players with less time to catch up with the other players.]]>
         </en>
-		<de>
-<![CDATA[
-Mit dieser Mod lässt sich das Einkommen für alle Farmen auf ein bestimmtes Tageslimit begrenzen.
+		<de><![CDATA[Mit dieser Mod lässt sich das Einkommen für alle Farmen auf ein bestimmtes Tageslimit begrenzen.
 
 Was genau kann die Mod?
 
-- Ein Limit pro Tag setzen
-- Eine Erhöhung des Limits, wenn eine Farm an einem Tag gar kein Geld verdient hat
-- Eine kleinere Erhöhung des Limits, wenn eine Farm an einem Tag nur wenig Geld verdient hat
+- Ein Limit pro Tag setzen.
+- Eine Erhöhung des Limits, wenn eine Farm an einem Tag gar kein Geld verdient hat.
+- Eine kleinere Erhöhung des Limits, wenn eine Farm an einem Tag nur wenig Geld verdient hat.
 - Die Limits für die einzelnen Farms sind in der farms.xml des Savegames gespeichert.
-- Alle Zuücksetzungswerte sind in der DailyLimitIncome.xml Datei im Savegame einstellbar.
+- Alle Zurücksetzungswerte sind in der DailyLimitIncome.xml Datei im Savegame einstellbar.
 WICHTIG: Alle erhöhten Limits werden wieder auf das Standardlimit zurückgesetzt sobald man an einem Tag wieder viel Geld verdient hat!
 
 Was zählt zu den Einnahmen?
 
-- Entlohnung von Missionen
+- Entlohnung von Missionen.
 - Verkauf von Ernte, Ballen und Tierprodukten
-- Verkauf von Holz
-- Verkauf von Tieren
+- Verkauf von Holz.
+- Verkauf von Tieren.
 
-Was kann ich nicht mehr machen, wenn ich mein Limit erreicht habe ?
+Was kann ich nicht mehr machen, wenn ich mein Limit erreicht habe?
 
-- Keine Missionen mehr an diesem Tag annehmen
-- Keine Ernte, Ballen oder Tierprodukte verkaufen
-- Kein Holz verkaufen
-- Keine Tiere verkaufen, wobei es weiterhin möglich ist Tiere zu verkaufen, aber nicht gewinnbringend
+- Keine Missionen mehr an diesem Tag annehmen.
+- Keine Ernte, Ballen oder Tierprodukte verkaufen.
+- Kein Holz verkaufen.
+- Keine Tiere verkaufen, wobei es weiterhin möglich ist Tiere zu verkaufen, aber nicht gewinnbringend.
 
-Kann ich weiterhin Fahrzeuge und Geräte verkaufen und mit anderen Spielern handeln ?
+Kann ich weiterhin Fahrzeuge und Geräte verkaufen und mit anderen Spielern handeln?
 
 Ja! Der Verkauf eines Gerätes oder Traktors stellt keine Kapitalerhöhung dar.
 Wenn ein Spieler dir Geld gibt, ist das seine Entscheidung dich weiter vorran zu bringen.
 
-Ok, aber was ist der Zweck dieser Mod ?
+Ok, aber was ist der Zweck dieser Mod?
 
 Man stellt sich vor, man hat einen 24/7 Server, auf dem Spieler ihre Farmen betreiben.
 Manche Spieler haben viel Zeit und kommen auf der Map entsprechend schnell vorran.
 Andere haben nur 2-3 mal in der Woche Zeit, sprich wenig Zeit.
 Durch das Limit werden Spieler mit viel Zeit in ihrem finanziellem Vorranschreiten ausgebremst und 
-durch die Erhöhung des Limits, bei gar keinem oder wenig Gewinn ist es für Spieler mit weniger Zeit möglich, zu den anderen Spielern aufzuholen.
-
-Bei Problemen oder Anregungen bitte unter https://github.com/tn4799/FS19_limitedDailyIncome/issues melden.
-Wenn du ein Problem posten willst, lade bitte die log.txt hoch.
-]]>
-		</de>
+durch die Erhöhung des Limits, bei gar keinem oder wenig Gewinn ist es für Spieler mit weniger Zeit möglich, zu den anderen Spielern aufzuholen.]]></de>
     </description>
     <iconFilename>modIcon.dds</iconFilename>
     <multiplayer supported="true"/>

@@ -12,7 +12,8 @@ LimitedDailyIncome.allowedMoneyTypes = {
     MoneyType.FIELD_SELL,
     MoneyType.PROPERTY_INCOME,
     MoneyType.INCOME_BGA,
-    MoneyType.TRANSFER
+    MoneyType.TRANSFER,
+    MoneyType.COLLECTIBLE
 }
 
 -- Daily Limit
@@ -47,7 +48,7 @@ function LimitedDailyIncome:loadMapFinished(node, arguments, callAsyncCallback)
     g_messageCenter:subscribe(MessageType.FARM_DELETED, LimitedDailyIncome.onFarmDeleted, LimitedDailyIncome)
     --g_messageCenter:subscribe(MessageType.PLAYER_FARM_CHANGED, LimitedDailyIncome.onPlayerFarmChanged, LimitedDailyIncome)
 
-    --LimitedDailyIncome:createHUDComponents(g_baseHUDFilename, g_currentMission.hud.gameInfoDisplay)
+    LimitedDailyIncome:createHUDComponents(g_baseHUDFilename, g_currentMission.hud.gameInfoDisplay)
 end
 
 function LimitedDailyIncome:loadFromXMLFile(xmlFilename)
@@ -63,13 +64,14 @@ function LimitedDailyIncome:loadFromXMLFile(xmlFilename)
 
     local i = 0
     while true do
-        local key = string.format("farms.farm(%d).limitedDayIncome", i)
+        local key = string.format("farms.farm(%d)", i)
 
-		if not hasXMLProperty(xmlFile, key) then
+		if not xmlFile:hasProperty(key) then
 			break
 		end
 
-        local farmId = getXMLInt(xmlFile, key .. "#farmId")
+        local farmId = xmlFile:getInt(key .. "#farmId")
+        key = key .. ".limitedDayIncome"
 
         -- added tag of limitedDayIncome to key
         LimitedDailyIncome.sales[farmId] = Utils.getNoNil(xmlFile:getFloat(key .. ".sales"), 0)
@@ -174,16 +176,13 @@ end
 --register new farm with default values
 function LimitedDailyIncome:onFarmCreated(farmId)
     if farmId == g_farmManager.SPECTATOR_FARM_ID then
-        print("spectator farm created")
         return
     end
 
     if not g_currentMission:getIsServer() then
-        print("not a server")
         return
     end
-    print("created farm with farmId " .. tostring(farmId))
-
+    
     LimitedDailyIncome.sales[farmId] = 0
     LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.STANDARD_LIMIT
 
@@ -233,38 +232,27 @@ function LimitedDailyIncome:startMission(superFunc, mission, farmId, spawnVehicl
 end
 
 -- disable making money with selling animals through trailer
-function LimitedDailyIncome:applyChangesTrailer(superFunc)
+function LimitedDailyIncome:applyTargetTrailer(superFunc, itemIndex, numItems)
     -- get vehicle the trailer is attached to
-    local farmId = 0
-    local vehicle = self.trailer:getAttacherVehicle()
+    local farmId = self.trailer:getOwnerFarmId()
 
-    if vehicle ~= nil then
-        farmId = vehicle:getActiveFarm()
-    else
-        farmId = self.trailer:getOwnerFarmId()
-        --alternative solution: g_currentMission.player.farmId
-        --must look deeper into it to decide which solution is better
-    end
-
-    LimitedDailyIncome:checkTotalSum(self, superFunc, farmId)
+    return LimitedDailyIncome:checkTotalSum(self, superFunc, farmId, itemIndex, numItems)
 end
 
 -- disable making money with selling animals through selling at animalTrader and husbandaries
-function LimitedDailyIncome:applyChangesFarms(superFunc)
-    local farmId = self.husbandry.ownerFarmId
+function LimitedDailyIncome:applyTargetFarms(superFunc, itemIndex, numItems)
+    local farmId = self.husbandry:getOwnerFarmId()
 
-    LimitedDailyIncome:checkTotalSum(self, superFunc, farmId)
+    return LimitedDailyIncome:checkTotalSum(self, superFunc, farmId, itemIndex, numItems)
 end
 
-function LimitedDailyIncome:checkTotalSum(this, superFunc, farmId)
-    local _, _, _, total = this:getPrices()
-
-    if LimitedDailyIncome.sales[farmId] >= LimitedDailyIncome.salesLimit[farmId] and total > 0 then
+function LimitedDailyIncome:checkTotalSum(this, superFunc, farmId, itemIndex, numItems)
+    if LimitedDailyIncome.sales[farmId] >= LimitedDailyIncome.salesLimit[farmId] then
         LimitedDailyIncome:showErrorDialog("LIMIT_REACHED_ANIMAL")
-        return
+        return false
     end
 
-    superFunc(this)
+    return superFunc(this, itemIndex, numItems)
 end
 
 function LimitedDailyIncome:addFillLevelFromTool(superFunc, farmId, deltaFillLevel, fillType, fillInfo, toolType)
@@ -283,6 +271,7 @@ function LimitedDailyIncome:addFillLevelFromTool(superFunc, farmId, deltaFillLev
     end
 
     if not usedByMission and LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
+        print("addFillLevelFromTool")
         LimitedDailyIncome:showErrorDialog("LIMIT_REACHED_FRUIT")
         return 0
     end
@@ -290,13 +279,14 @@ function LimitedDailyIncome:addFillLevelFromTool(superFunc, farmId, deltaFillLev
     return superFunc(self, farmId, deltaFillLevel, fillType, fillInfo, toolType)
 end
 
-function LimitedDailyIncome:sellWood(superFunc, farmId)
-    if LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
+function LimitedDailyIncome:processWood(superFunc, farmId, noEventSend)
+    local farmIdOwnerUnloadingStation = self.target:getTarget():getOwnerFarmId()
+    if farmId ~= farmIdOwnerUnloadingStation and LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
         LimitedDailyIncome:showErrorDialog("LIMIT_REACHED_WOOD")
         return
     end
 
-    superFunc(self, farmId)
+    superFunc(self, farmId, noEventSend)
 end
 
 function LimitedDailyIncome:getIsFillAllowedFromFarm(superFunc, farmId)
@@ -319,14 +309,14 @@ function LimitedDailyIncome:handleDischarge(superFunc, dischargeNode, discharged
     end
 end
 
---[[
+
 function LimitedDailyIncome:draw()
     if not g_currentMission.hud:getIsVisible() then
         return
     end
 
     local gameInfoDisplay = g_currentMission.hud.gameInfoDisplay
-    
+
     if g_currentMission.player ~= nil and g_currentMission.player.farmId == g_farmManager.SPECTATOR_FARM_ID then 
         LimitedDailyIncome.backgroundElement:setVisible(false)
         return
@@ -339,11 +329,12 @@ function LimitedDailyIncome:draw()
 	setTextColor(unpack(gameInfoDisplay.COLOR.TEXT))
 
     local textOffX, textOffY = gameInfoDisplay:scalePixelToScreenVector(gameInfoDisplay.POSITION.MONEY_TEXT)
+
     local salesLimitBoxPosX, salesLimitBoxPosY = LimitedDailyIncome.salesLimitBox:getPosition()
     local salesBoxPosX, salesBoxPosY = LimitedDailyIncome.salesBox:getPosition()
     local salesLimitTextPositionX = salesLimitBoxPosX + LimitedDailyIncome.salesLimitBox:getWidth() + textOffX
     local salesTextPositionX = salesBoxPosX + LimitedDailyIncome.salesBox:getWidth() + textOffX - 0.005
-    local textPositionY = salesBoxPosY + LimitedDailyIncome.salesBox:getHeight() * 0.5 + textOffY
+    local textPositionY = salesBoxPosY + LimitedDailyIncome.salesBox:getHeight() * 0.5 - gameInfoDisplay.moneyTextSize * 0.5 + textOffY
 
     if g_currentMission.player ~= nil then
 		local farmId = g_currentMission.player.farmId
@@ -354,9 +345,16 @@ function LimitedDailyIncome:draw()
         renderText(salesTextPositionX, textPositionY, gameInfoDisplay.moneyTextSize, salesText)
 	end
 
-    LimitedDailyIncome.moneyIconOverlay:setUVs(getNormalizedUVs(gameInfoDisplay.UV.MONEY_ICON[gameInfoDisplay.moneyUnit]))
+    LimitedDailyIncome.moneyIconOverlay:setUVs(GuiUtils.getUVs(GameInfoDisplay.UV.MONEY_ICON))
+    local x, y = LimitedDailyIncome.moneyIconOverlay:getPosition()
+	local moneyCurrencyPositionX = LimitedDailyIncome.moneyIconOverlay.width * 0.5 + x
+	local moneyCurrencyPositionY = LimitedDailyIncome.moneyIconOverlay.height * 0.5 + y - gameInfoDisplay.moneyTextSize * 0.5 + textOffY
+
+    setTextAlignment(RenderText.ALIGN_CENTER)
+	setTextColor(unpack(GameInfoDisplay.COLOR.ICON))
+    renderText(moneyCurrencyPositionX, moneyCurrencyPositionY, gameInfoDisplay.moneyTextSize, gameInfoDisplay.moneyCurrencyText)
 end
-]]
+
 
 function LimitedDailyIncome:createHUDComponents(hudAtlasPath, gameInfoDisplay)
     local topRightX, topRightY = GameInfoDisplay.getBackgroundPosition(1)
@@ -377,11 +375,15 @@ function LimitedDailyIncome:createHUDComponents(hudAtlasPath, gameInfoDisplay)
     local widthBackground = -marginWidth 
                     + LimitedDailyIncome.salesBox:getWidth() + marginWidth * 2
                     + LimitedDailyIncome.salesLimitBox:getWidth() + marginWidth
-    local backgroundOverlay = Overlay:new(LimitedDailyIncome.overlayPath, posX, posY, widthBackground, gameInfoDisplay:getHeight())
-    local backgroundElement = HUDElement:new(backgroundOverlay)
+
+    local backgroundOverlay = Overlay.new(g_baseUIFilename, posX, posY, widthBackground, gameInfoDisplay:getHeight())
+    backgroundOverlay:setUVs(g_colorBgUVs)
+	backgroundOverlay:setColor(0, 0, 0, 0.75)
+
+    local backgroundElement = HUDElement.new(backgroundOverlay)
     backgroundElement:addChild(LimitedDailyIncome.salesLimitBox)
     backgroundElement:addChild(LimitedDailyIncome.salesBox)
-    
+
     gameInfoDisplay:addChild(backgroundElement)
     LimitedDailyIncome.backgroundElement = backgroundElement
 end
@@ -395,19 +397,19 @@ function LimitedDailyIncome:createBox(hudAtlasPath, rightX, bottomY, gameInfoDis
     end
 	local posX = rightX - boxWidth
 	local posY = bottomY + boxHeight * 0.5
-	local boxOverlay = Overlay:new(nil, posX, bottomY, boxWidth, boxHeight)
-	local boxElement = HUDElement:new(boxOverlay)
-    
+	local boxOverlay = Overlay.new(nil, posX, bottomY, boxWidth, boxHeight)
+	local boxElement = HUDElement.new(boxOverlay)
+
     if withIcon then
         posY = bottomY + (boxHeight - iconHeight) * 0.5
 
-        local iconOverlay = Overlay:new(hudAtlasPath, posX, posY, iconWidth, iconHeight)
+        local iconOverlay = Overlay.new(hudAtlasPath, posX + 0.005, posY, iconWidth, iconHeight)
 
-        iconOverlay:setUVs(getNormalizedUVs(gameInfoDisplay.UV.MONEY_ICON[gameInfoDisplay.moneyUnit]))
+        iconOverlay:setUVs(GuiUtils.getUVs(GameInfoDisplay.UV.MONEY_ICON))
         iconOverlay:setColor(unpack(gameInfoDisplay.COLOR.ICON))
         LimitedDailyIncome.moneyIconOverlay = iconOverlay
 
-        boxElement:addChild(HUDElement:new(iconOverlay))
+        boxElement:addChild(HUDElement.new(iconOverlay))
     end
 
     return posX, boxElement
@@ -487,6 +489,16 @@ function LimitedDailyIncome:setSalesForFarm(farmId, sales)
     LimitedDailyIncome.sales[farmId] = sales
 end
 
+function LimitedDailyIncome:onOpenConstructionScreen()
+    print("open construction screen")
+    LimitedDailyIncome.backgroundElement:setVisible(false)
+end
+
+function LimitedDailyIncome:onCloseConstructionScreen()
+    print("on close construction screen")
+    LimitedDailyIncome.backgroundElement:setVisible(true)
+end
+
 FarmManager.saveToXMLFile = Utils.appendedFunction(FarmManager.saveToXMLFile, LimitedDailyIncome.saveToXMLFile)
 FarmManager.loadFromXMLFile = Utils.appendedFunction(FarmManager.loadFromXMLFile, LimitedDailyIncome.loadFromXMLFile)
 --tracking money
@@ -496,11 +508,18 @@ FarmManager.playerJoinedGame = Utils.appendedFunction(FarmManager.playerJoinedGa
 -- permission managing
 -- overwritten is used because we do some code injection. This means we insert some code at the start of the original function
 MissionManager.startMission = Utils.overwrittenFunction(MissionManager.startMission, LimitedDailyIncome.startMission)
---DealerFarmStrategie.applyChanges = Utils.overwrittenFunction(DealerFarmStrategie.applyChanges, LimitedDailyIncome.applyChangesFarms)
---DealerTrailerStrategie.applyChanges = Utils.overwrittenFunction(DealerTrailerStrategie.applyChanges, LimitedDailyIncome.applyChangesTrailer)
-SellingStation.addFillLevelFromTool = Utils.overwrittenFunction(SellingStation.addFillLevelFromTool, LimitedDailyIncome.addFillLevelFromTool)
+
+--AnimalScreen.onYesNoSource = Utils.overwrittenFunction(AnimalScreen.onYesNoSource, LimitedDailyIncome.onYesNoSource)
+
+AnimalScreenDealerFarm.applyTarget = Utils.overwrittenFunction(AnimalScreenDealerFarm.applyTarget, LimitedDailyIncome.applyTargetFarms)
+AnimalScreenDealerTrailer.applyTarget = Utils.overwrittenFunction(AnimalScreenDealerTrailer.applyTarget, LimitedDailyIncome.applyTargetTrailer)
+
+--SellingStation.addFillLevelFromTool = Utils.overwrittenFunction(SellingStation.addFillLevelFromTool, LimitedDailyIncome.addFillLevelFromTool)
 SellingStation.getIsFillAllowedFromFarm = Utils.overwrittenFunction(SellingStation.getIsFillAllowedFromFarm, LimitedDailyIncome.getIsFillAllowedFromFarm)
---WoodSellStationPlaceable.sellWood = Utils.overwrittenFunction(WoodSellStationPlaceable.sellWood, LimitedDailyIncome.sellWood)
+WoodUnloadTrigger.processWood = Utils.overwrittenFunction(WoodUnloadTrigger.processWood, LimitedDailyIncome.processWood)
+
+ConstructionScreen.onOpen = Utils.appendedFunction(ConstructionScreen.onOpen, LimitedDailyIncome.onOpenConstructionScreen)
+ConstructionScreen.onClose = Utils.appendedFunction(ConstructionScreen.onClose, LimitedDailyIncome.onCloseConstructionScreen)
 
 Server.sendObjects = Utils.prependedFunction(Server.sendObjects, LimitedDailyIncome.sendObjects)
 

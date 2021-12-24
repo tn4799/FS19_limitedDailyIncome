@@ -420,6 +420,14 @@ function LimitedDailyIncome:createBox(hudAtlasPath, rightX, bottomY, gameInfoDis
     return posX, boxElement
 end
 
+function LimitedDailyIncome:onOpenConstructionScreen()
+    LimitedDailyIncome.backgroundElement:setVisible(false)
+end
+
+function LimitedDailyIncome:onCloseConstructionScreen()
+    LimitedDailyIncome.backgroundElement:setVisible(true)
+end
+
 function LimitedDailyIncome:showErrorDialog(errorMessage)
     g_gui:showInfoDialog({
         text = g_i18n:getText(errorMessage)
@@ -494,22 +502,6 @@ function LimitedDailyIncome:setSalesForFarm(farmId, sales)
     LimitedDailyIncome.sales[farmId] = sales
 end
 
-function LimitedDailyIncome:onOpenConstructionScreen()
-    print("open construction screen")
-    LimitedDailyIncome.backgroundElement:setVisible(false)
-end
-
-function LimitedDailyIncome:onCloseConstructionScreen()
-    print("on close construction screen")
-    LimitedDailyIncome.backgroundElement:setVisible(true)
-end
-
-function LimitedDailyIncome:changeScreen(source, screenClass, returnScreenClass)
-    local screenElement = g_gui.screens[screenClass]
-
-    print("screenName: " .. tostring(screenElement and ScreenElement.name or ""))
-end
-
 FarmManager.saveToXMLFile = Utils.appendedFunction(FarmManager.saveToXMLFile, LimitedDailyIncome.saveToXMLFile)
 FarmManager.loadFromXMLFile = Utils.appendedFunction(FarmManager.loadFromXMLFile, LimitedDailyIncome.loadFromXMLFile)
 --tracking money
@@ -520,8 +512,6 @@ FarmManager.playerJoinedGame = Utils.appendedFunction(FarmManager.playerJoinedGa
 -- overwritten is used because we do some code injection. This means we insert some code at the start of the original function
 MissionManager.startMission = Utils.overwrittenFunction(MissionManager.startMission, LimitedDailyIncome.startMission)
 
---AnimalScreen.onYesNoSource = Utils.overwrittenFunction(AnimalScreen.onYesNoSource, LimitedDailyIncome.onYesNoSource)
-
 AnimalScreenDealerFarm.applyTarget = Utils.overwrittenFunction(AnimalScreenDealerFarm.applyTarget, LimitedDailyIncome.applyTargetFarms)
 AnimalScreenDealerTrailer.applyTarget = Utils.overwrittenFunction(AnimalScreenDealerTrailer.applyTarget, LimitedDailyIncome.applyTargetTrailer)
 
@@ -531,8 +521,6 @@ WoodUnloadTrigger.processWood = Utils.overwrittenFunction(WoodUnloadTrigger.proc
 
 ConstructionScreen.onOpen = Utils.appendedFunction(ConstructionScreen.onOpen, LimitedDailyIncome.onOpenConstructionScreen)
 ConstructionScreen.onClose = Utils.appendedFunction(ConstructionScreen.onClose, LimitedDailyIncome.onCloseConstructionScreen)
-
---Gui.changeScreen = Utils.appendedFunction(Gui.changeScreen, LimitedDailyIncome.changeScreen)
 
 Server.sendObjects = Utils.prependedFunction(Server.sendObjects, LimitedDailyIncome.sendObjects)
 

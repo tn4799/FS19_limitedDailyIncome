@@ -44,6 +44,11 @@ function LimitedDailyIncome:loadMapFinished(node, arguments, callAsyncCallback)
         end
     end
 
+    local screenClass = g_gui.nameScreenTypes["ConstructionScreen"]
+    local screenElement = g_gui.screens[screenClass]
+    
+    screenElement.onOpen = Utils.appendedFunction(screenElement.onOpen, LimitedDailyIncome.onOpenConstructionScreen)
+
     g_messageCenter:subscribe(MessageType.FARM_CREATED, LimitedDailyIncome.onFarmCreated, LimitedDailyIncome)
     g_messageCenter:subscribe(MessageType.FARM_DELETED, LimitedDailyIncome.onFarmDeleted, LimitedDailyIncome)
     --g_messageCenter:subscribe(MessageType.PLAYER_FARM_CHANGED, LimitedDailyIncome.onPlayerFarmChanged, LimitedDailyIncome)
@@ -499,6 +504,12 @@ function LimitedDailyIncome:onCloseConstructionScreen()
     LimitedDailyIncome.backgroundElement:setVisible(true)
 end
 
+function LimitedDailyIncome:changeScreen(source, screenClass, returnScreenClass)
+    local screenElement = g_gui.screens[screenClass]
+
+    print("screenName: " .. tostring(screenElement and ScreenElement.name or ""))
+end
+
 FarmManager.saveToXMLFile = Utils.appendedFunction(FarmManager.saveToXMLFile, LimitedDailyIncome.saveToXMLFile)
 FarmManager.loadFromXMLFile = Utils.appendedFunction(FarmManager.loadFromXMLFile, LimitedDailyIncome.loadFromXMLFile)
 --tracking money
@@ -520,6 +531,8 @@ WoodUnloadTrigger.processWood = Utils.overwrittenFunction(WoodUnloadTrigger.proc
 
 ConstructionScreen.onOpen = Utils.appendedFunction(ConstructionScreen.onOpen, LimitedDailyIncome.onOpenConstructionScreen)
 ConstructionScreen.onClose = Utils.appendedFunction(ConstructionScreen.onClose, LimitedDailyIncome.onCloseConstructionScreen)
+
+--Gui.changeScreen = Utils.appendedFunction(Gui.changeScreen, LimitedDailyIncome.changeScreen)
 
 Server.sendObjects = Utils.prependedFunction(Server.sendObjects, LimitedDailyIncome.sendObjects)
 

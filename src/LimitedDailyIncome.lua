@@ -31,27 +31,21 @@ LimitedDailyIncome.salesBox = nil
 LimitedDailyIncome.moneyIconOverlay = nil
 LimitedDailyIncome.backgroundElement = nil
 
+LimitedDailyIncome.backupSellingStationFillAllowed = SellingStation.getIsFillAllowedFromFarm
+
 function LimitedDailyIncome:loadMapFinished(node, arguments, callAsyncCallback)
     LimitedDailyIncome.staticValuesFilename = string.format(getUserProfileAppPath() .. "savegame%d/LimitedDailyIncome.xml", g_currentMission.missionInfo.savegameIndex)
     if g_currentMission:getIsServer() then
         g_messageCenter:subscribe(MessageType.DAY_CHANGED, LimitedDailyIncome.dayChanged, LimitedDailyIncome)
     end
 
-    local vehicleTypes = g_vehicleTypeManager:getTypes()
-    for _, vehicleType in pairs(vehicleTypes) do
-        if SpecializationUtil.hasSpecialization(Dischargeable, vehicleType.specializations) then
-            SpecializationUtil.registerOverwrittenFunction(vehicleType, "handleDischarge", LimitedDailyIncome.handleDischarge)
-        end
-    end
-
     local screenClass = g_gui.nameScreenTypes["ConstructionScreen"]
     local screenElement = g_gui.screens[screenClass]
-    
+
     screenElement.onOpen = Utils.appendedFunction(screenElement.onOpen, LimitedDailyIncome.onOpenConstructionScreen)
 
     g_messageCenter:subscribe(MessageType.FARM_CREATED, LimitedDailyIncome.onFarmCreated, LimitedDailyIncome)
     g_messageCenter:subscribe(MessageType.FARM_DELETED, LimitedDailyIncome.onFarmDeleted, LimitedDailyIncome)
-    --g_messageCenter:subscribe(MessageType.PLAYER_FARM_CHANGED, LimitedDailyIncome.onPlayerFarmChanged, LimitedDailyIncome)
 
     LimitedDailyIncome:createHUDComponents(g_baseHUDFilename, g_currentMission.hud.gameInfoDisplay)
 end
@@ -61,7 +55,6 @@ function LimitedDailyIncome:loadFromXMLFile(xmlFilename)
         --load default values
         self.sales = {}
         self.salesLimit = {}
-
         return
     end
 
@@ -260,30 +253,6 @@ function LimitedDailyIncome:checkTotalSum(this, superFunc, farmId, itemIndex, nu
     return superFunc(this, itemIndex, numItems)
 end
 
-function LimitedDailyIncome:addFillLevelFromTool(superFunc, farmId, deltaFillLevel, fillType, fillInfo, toolType)
-    --TODO: check if this method is called when limit is reached
-    local usedByMission = false
-
-    -- need to check for missions since unloading for mission is still allowed
-    for _, mission in pairs(self.missions) do
-        if mission.fillSold ~= nil and mission.fillType == fillType and mission.farmId == farmId then
-            mission:fillSold(deltaFillLevel)
-
-            usedByMission = true
-
-            break
-        end
-    end
-
-    if not usedByMission and LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
-        print("addFillLevelFromTool")
-        LimitedDailyIncome:showErrorDialog("LIMIT_REACHED_FRUIT")
-        return 0
-    end
-
-    return superFunc(self, farmId, deltaFillLevel, fillType, fillInfo, toolType)
-end
-
 function LimitedDailyIncome:processWood(superFunc, farmId, noEventSend)
     local farmIdOwnerUnloadingStation = self.target:getTarget():getOwnerFarmId()
     if farmId ~= farmIdOwnerUnloadingStation and LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
@@ -295,25 +264,35 @@ function LimitedDailyIncome:processWood(superFunc, farmId, noEventSend)
 end
 
 function LimitedDailyIncome:getIsFillAllowedFromFarm(superFunc, farmId)
+    --printCallstack()
+    print("storeSoldGoods: " .. tostring(self.storeSoldGoods))
+    if self.storeSoldGoods then
+        print("storeGoods")
+		return SellingStation:superClass().getIsFillAllowedFromFarm(self, farmId)
+	end
+
     if LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
+        print("not allowed")
         return false
     end
 
-    return true
+    return superFunc(self, farmId)
 end
 
-function LimitedDailyIncome:handleDischarge(superFunc, dischargeNode, dischargedLiters, minDropReached, hasMinDropFillLevel)
-    superFunc(self, dischargeNode, dischargedLiters, minDropReached, hasMinDropFillLevel)
+function LimitedDailyIncome:load(superFunc, components, xmlFile, key, customEnv, i3dMappings)
+    local erg = superFunc(self, components, xmlFile, key, customEnv, i3dMappings)
 
-    local spec = self.spec_dischargeable
-    if spec.currentDischargeState == Dischargeable.DISCHARGE_STATE_OBJECT then
+    function self.unloadingStation.getIsFillAllowedFromFarm(_, farmId)
+        print("selling station of production point")
+        if not self.isOwned and LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
+            return false
+        end
 
-        if not LimitedDailyIncome:getIsFillAllowedFromFarm(nil, self:getActiveFarm()) then
-			self:setDischargeState(Dischargeable.DISCHARGE_STATE_OFF)
-		end
-    end
+		return g_currentMission.accessHandler:canFarmAccess(farmId, self.owningPlaceable)
+	end
+
+    return erg
 end
-
 
 function LimitedDailyIncome:draw()
     if not g_currentMission.hud:getIsVisible() then
@@ -421,6 +400,10 @@ function LimitedDailyIncome:createBox(hudAtlasPath, rightX, bottomY, gameInfoDis
 end
 
 function LimitedDailyIncome:onOpenConstructionScreen()
+    print("Translations:")
+    for k,v in pairs(g_i18n.texts) do
+        print("key: " .. tostring(k) .. "    value: " .. tostring(v))
+    end
     LimitedDailyIncome.backgroundElement:setVisible(false)
 end
 
@@ -447,8 +430,6 @@ function LimitedDailyIncome:addConsoleCommands()
     addConsoleCommand("ldiSetSalesForFarm", "set the current sales of the farm with the farmId to the chosen value", "setSalesForFarm", LimitedDailyIncome)
     addConsoleCommand("ldiSetSalesLimitForFarm", "set the current sales limit of the farm with the farmId to the entered value", "setSalesLimitForFarm", LimitedDailyIncome)
     addConsoleCommand("restartSavegame", "load and start a savegame", "restartSaveGame", LimitedDailyIncome)
-    addConsoleCommand("printGUITable", "prints the content of a table in g_gui", "printGUITable", LimitedDailyIncome)
-    addConsoleCommand("printHUDTable", "prints the content of the table g_currentMission.hud", "printHUDTable", LimitedDailyIncome)
 end
 
 -- functions for console commands
@@ -469,22 +450,6 @@ end
 function LimitedDailyIncome:restartSaveGame(saveGameNumber)
     if g_server then
         restartApplication(" -autoStartSavegameId " .. saveGameNumber)
-    end
-end
-
-function LimitedDailyIncome:printGUITable(key)
-    if type(g_gui[key]) ~= "table" then
-        print("value: " .. tostring(g_gui[key]))
-        return
-    end
-    for k,v in pairs(g_gui[key]) do
-        print("key: " .. tostring(k) .. "    value: " .. tostring(v))
-    end
-end
-
-function LimitedDailyIncome:printHUDTable()
-    for k,v in pairs(g_currentMission.hud) do
-        print("key: " .. tostring(k) .. "    value: " .. tostring(v))
     end
 end
 
@@ -515,9 +480,9 @@ MissionManager.startMission = Utils.overwrittenFunction(MissionManager.startMiss
 AnimalScreenDealerFarm.applyTarget = Utils.overwrittenFunction(AnimalScreenDealerFarm.applyTarget, LimitedDailyIncome.applyTargetFarms)
 AnimalScreenDealerTrailer.applyTarget = Utils.overwrittenFunction(AnimalScreenDealerTrailer.applyTarget, LimitedDailyIncome.applyTargetTrailer)
 
---SellingStation.addFillLevelFromTool = Utils.overwrittenFunction(SellingStation.addFillLevelFromTool, LimitedDailyIncome.addFillLevelFromTool)
 SellingStation.getIsFillAllowedFromFarm = Utils.overwrittenFunction(SellingStation.getIsFillAllowedFromFarm, LimitedDailyIncome.getIsFillAllowedFromFarm)
 WoodUnloadTrigger.processWood = Utils.overwrittenFunction(WoodUnloadTrigger.processWood, LimitedDailyIncome.processWood)
+ProductionPoint.load = Utils.overwrittenFunction(ProductionPoint.load, LimitedDailyIncome.load)
 
 ConstructionScreen.onOpen = Utils.appendedFunction(ConstructionScreen.onOpen, LimitedDailyIncome.onOpenConstructionScreen)
 ConstructionScreen.onClose = Utils.appendedFunction(ConstructionScreen.onClose, LimitedDailyIncome.onCloseConstructionScreen)

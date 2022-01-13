@@ -264,15 +264,11 @@ function LimitedDailyIncome:processWood(superFunc, farmId, noEventSend)
 end
 
 function LimitedDailyIncome:getIsFillAllowedFromFarm(superFunc, farmId)
-    --printCallstack()
-    print("storeSoldGoods: " .. tostring(self.storeSoldGoods))
     if self.storeSoldGoods then
-        print("storeGoods")
-		return SellingStation:superClass().getIsFillAllowedFromFarm(self, farmId)
+        return SellingStation:superClass().getIsFillAllowedFromFarm(self, farmId)
 	end
 
     if LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
-        print("not allowed")
         return false
     end
 
@@ -283,7 +279,6 @@ function LimitedDailyIncome:load(superFunc, components, xmlFile, key, customEnv,
     local erg = superFunc(self, components, xmlFile, key, customEnv, i3dMappings)
 
     function self.unloadingStation.getIsFillAllowedFromFarm(_, farmId)
-        print("selling station of production point")
         if not self.isOwned and LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
             return false
         end
@@ -400,10 +395,6 @@ function LimitedDailyIncome:createBox(hudAtlasPath, rightX, bottomY, gameInfoDis
 end
 
 function LimitedDailyIncome:onOpenConstructionScreen()
-    print("Translations:")
-    for k,v in pairs(g_i18n.texts) do
-        print("key: " .. tostring(k) .. "    value: " .. tostring(v))
-    end
     LimitedDailyIncome.backgroundElement:setVisible(false)
 end
 

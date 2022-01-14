@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
-<modDesc descVersion="61">
+<modDesc descVersion="63">
     <author>tn4799, Tensuko</author>
     <version>1.0.0.0</version>
     <title>
@@ -24,9 +24,10 @@ IMPORTANT: All increased limits will be reset to the default limit as soon as yo
 What counts as income?
 
 - Reward for missions
-- Selling crops, bales and animal products
-- Selling wood
-- Selling animals
+	Selling crops, bales and animal products
+	Selling products
+	Selling wood
+	Selling animals
 
 What can I not do once I reach my limit ?
 
@@ -34,6 +35,7 @@ What can I not do once I reach my limit ?
 - Nell crops, bales or animal products
 - Sell wood
 - Sell animals, although it's still possible to sell animals, but not for profit
+- The direct selling at production points is disabled once the limit is reached.
 
 Can I still sell vehicles and equipment and trade with other players ?
 
@@ -63,6 +65,7 @@ Was zählt zu den Einnahmen?
 
 - Entlohnung von Missionen.
 - Verkauf von Ernte, Ballen und Tierprodukten
+- Verkauf von hergestellten Produkten
 - Verkauf von Holz.
 - Verkauf von Tieren.
 
@@ -72,6 +75,7 @@ Was kann ich nicht mehr machen, wenn ich mein Limit erreicht habe?
 - Keine Ernte, Ballen oder Tierprodukte verkaufen.
 - Kein Holz verkaufen.
 - Keine Tiere verkaufen, wobei es weiterhin möglich ist Tiere zu verkaufen, aber nicht gewinnbringend.
+- Der Direktverkauf von Produktionen wird deaktiviert wenn das Limit erreicht wird.
 
 Kann ich weiterhin Fahrzeuge und Geräte verkaufen und mit anderen Spielern handeln?
 

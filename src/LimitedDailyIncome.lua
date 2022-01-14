@@ -289,6 +289,15 @@ function LimitedDailyIncome:load(superFunc, components, xmlFile, key, customEnv,
     return erg
 end
 
+function LimitedDailyIncome:directlySellOutputs(superFunc)
+    local farmId = self:getOwnerFarmId()
+    if farmId ~= g_farmManager.SPECTATOR_FARM_ID and LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
+        return
+    end
+
+    superFunc(self)
+end
+
 function LimitedDailyIncome:draw()
     if not g_currentMission.hud:getIsVisible() then
         return
@@ -474,6 +483,7 @@ AnimalScreenDealerTrailer.applyTarget = Utils.overwrittenFunction(AnimalScreenDe
 SellingStation.getIsFillAllowedFromFarm = Utils.overwrittenFunction(SellingStation.getIsFillAllowedFromFarm, LimitedDailyIncome.getIsFillAllowedFromFarm)
 WoodUnloadTrigger.processWood = Utils.overwrittenFunction(WoodUnloadTrigger.processWood, LimitedDailyIncome.processWood)
 ProductionPoint.load = Utils.overwrittenFunction(ProductionPoint.load, LimitedDailyIncome.load)
+ProductionPoint.directlySellOutputs = Utils.overwrittenFunction(ProductionPoint.directlySellOutputs, LimitedDailyIncome.directlySellOutputs)
 
 ConstructionScreen.onOpen = Utils.appendedFunction(ConstructionScreen.onOpen, LimitedDailyIncome.onOpenConstructionScreen)
 ConstructionScreen.onClose = Utils.appendedFunction(ConstructionScreen.onClose, LimitedDailyIncome.onCloseConstructionScreen)

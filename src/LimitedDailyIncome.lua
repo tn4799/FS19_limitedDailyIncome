@@ -146,10 +146,10 @@ end
 
 function LimitedDailyIncome:playerJoinedGame(uniqueUserId, userId, user, connection)
     if g_currentMission:getIsServer() then
-        -- sync sales and salesLimit for all farms (because user could switch farm to earn money for them)
+
         for farmId, sales in pairs(LimitedDailyIncome.sales) do
             local salesLimit = LimitedDailyIncome.salesLimit[farmId]
-            g_server:broadcastEvent(UpdateDataEvent:new(farmId, sales, salesLimit), nil, connection)
+            g_server:broadcastEvent(UpdateDataEvent.new(farmId, sales, salesLimit), nil, connection)
         end
     end
 end
@@ -167,7 +167,7 @@ function LimitedDailyIncome:dayChanged()
 
         LimitedDailyIncome.sales[farmId] = 0
 
-        g_server:broadcastEvent(UpdateDataEvent:new(farmId, LimitedDailyIncome.sales[farmId], LimitedDailyIncome.salesLimit[farmId]))
+        g_server:broadcastEvent(UpdateDataEvent.new(farmId, LimitedDailyIncome.sales[farmId], LimitedDailyIncome.salesLimit[farmId]))
     end
 end
 
@@ -180,13 +180,13 @@ function LimitedDailyIncome:onFarmCreated(farmId)
     if not g_currentMission:getIsServer() then
         return
     end
-    
+
     LimitedDailyIncome.sales[farmId] = 0
     LimitedDailyIncome.salesLimit[farmId] = LimitedDailyIncome.STANDARD_LIMIT
 
     local sales = LimitedDailyIncome.sales[farmId]
     local salesLimit = LimitedDailyIncome.salesLimit[farmId]
-    g_server:broadcastEvent(UpdateDataEvent:new(farmId, sales, salesLimit))
+    g_server:broadcastEvent(UpdateDataEvent.new(farmId, sales, salesLimit))
 end
 
 --remove farm if deleted
@@ -195,7 +195,7 @@ function LimitedDailyIncome:onFarmDeleted(farmId)
     LimitedDailyIncome.salesLimit[farmId] = nil
 
     if g_currentMission:getIsServer() then
-        g_server:broadcastEvent(UpdateDataEvent:new(farmId, LimitedDailyIncome.sales[farmId], LimitedDailyIncome.salesLimit[farmId]))
+        g_server:broadcastEvent(UpdateDataEvent.new(farmId, LimitedDailyIncome.sales[farmId], LimitedDailyIncome.salesLimit[farmId]))
     end
 end
 
@@ -205,7 +205,7 @@ function LimitedDailyIncome:addMoney(amount, farmId, moneyType, addChange, force
         LimitedDailyIncome.sales[farmId] = LimitedDailyIncome.sales[farmId] + amount
 
         if g_currentMission:getIsServer() then
-            g_server:broadcastEvent(UpdateDataEvent:new(farmId, LimitedDailyIncome.sales[farmId], LimitedDailyIncome.salesLimit[farmId]))
+            g_server:broadcastEvent(UpdateDataEvent.new(farmId, LimitedDailyIncome.sales[farmId], LimitedDailyIncome.salesLimit[farmId]))
         end
     end
 end
@@ -289,8 +289,21 @@ function LimitedDailyIncome:load(superFunc, components, xmlFile, key, customEnv,
     return erg
 end
 
+function LimitedDailyIncome:directlySellOutputs(superFunc)
+    local farmId = self:getOwnerFarmId()
+    if farmId ~= g_farmManager.SPECTATOR_FARM_ID and LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
+        return
+    end
+
+    superFunc(self)
+end
+
 function LimitedDailyIncome:draw()
     if not g_currentMission.hud:getIsVisible() then
+        return
+    end
+
+    if g_currentMission.player ~= nil and g_currentMission.player.farmId == g_farmManager.SPECTATOR_FARM_ID then
         return
     end
 
@@ -411,7 +424,7 @@ end
 function LimitedDailyIncome.sendObjects(self,connection)
     for farmId, sales in pairs(LimitedDailyIncome.sales) do
        local salesLimit = LimitedDailyIncome.salesLimit[farmId]
-       connection:sendEvent(UpdateDataEvent:new(farmId, sales, salesLimit))
+       connection:sendEvent(UpdateDataEvent.new(farmId, sales, salesLimit))
    end
 end
 
@@ -474,6 +487,7 @@ AnimalScreenDealerTrailer.applyTarget = Utils.overwrittenFunction(AnimalScreenDe
 SellingStation.getIsFillAllowedFromFarm = Utils.overwrittenFunction(SellingStation.getIsFillAllowedFromFarm, LimitedDailyIncome.getIsFillAllowedFromFarm)
 WoodUnloadTrigger.processWood = Utils.overwrittenFunction(WoodUnloadTrigger.processWood, LimitedDailyIncome.processWood)
 ProductionPoint.load = Utils.overwrittenFunction(ProductionPoint.load, LimitedDailyIncome.load)
+ProductionPoint.directlySellOutputs = Utils.overwrittenFunction(ProductionPoint.directlySellOutputs, LimitedDailyIncome.directlySellOutputs)
 
 ConstructionScreen.onOpen = Utils.appendedFunction(ConstructionScreen.onOpen, LimitedDailyIncome.onOpenConstructionScreen)
 ConstructionScreen.onClose = Utils.appendedFunction(ConstructionScreen.onClose, LimitedDailyIncome.onCloseConstructionScreen)

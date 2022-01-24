@@ -39,6 +39,13 @@ function LimitedDailyIncome:loadMapFinished(node, arguments, callAsyncCallback)
         g_messageCenter:subscribe(MessageType.DAY_CHANGED, LimitedDailyIncome.dayChanged, LimitedDailyIncome)
     end
 
+    local vehicleTypes = g_vehicleTypeManager:getTypes()
+    for _, vehicleType in pairs(vehicleTypes) do
+        if SpecializationUtil.hasSpecialization(Dischargeable, vehicleType.specializations) then
+            SpecializationUtil.registerOverwrittenFunction(vehicleType, "handleDischarge", LimitedDailyIncome.handleDischarge)
+        end
+    end
+
     local screenClass = g_gui.nameScreenTypes["ConstructionScreen"]
     local screenElement = g_gui.screens[screenClass]
 
@@ -268,7 +275,7 @@ function LimitedDailyIncome:getIsFillAllowedFromFarm(superFunc, farmId)
         return SellingStation:superClass().getIsFillAllowedFromFarm(self, farmId)
 	end
 
-    if LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
+    if not self.isOwned and LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
         return false
     end
 
@@ -296,6 +303,20 @@ function LimitedDailyIncome:directlySellOutputs(superFunc)
     end
 
     superFunc(self)
+end
+
+function LimitedDailyIncome:handleDischarge(superFunc, dischargeNode, dischargedLiters, minDropReached, hasMinDropFillLevel)
+    superFunc(self, dischargeNode, dischargedLiters, minDropReached, hasMinDropFillLevel)
+
+    local spec = self.spec_dischargeable
+    if spec.currentDischargeState == Dischargeable.DISCHARGE_STATE_OBJECT then
+        local dischargeNode = spec.currentDischargeNode
+        local object = dischargeNode.dischargeObject
+
+        if object.getIsFillAllowedFromFarm ~= nil and not object:getIsFillAllowedFromFarm(self:getActiveFarm()) then
+			self:setDischargeState(Dischargeable.DISCHARGE_STATE_OFF)
+		end
+    end
 end
 
 function LimitedDailyIncome:draw()

@@ -330,7 +330,7 @@ function LimitedDailyIncome:onSellGoodsQuestion(superFunc, yes)
     local farmId = self.spec_trainSystem.rentFarmId
 
     if yes and farmId ~= g_farmManager.SPECTATOR_FARM_ID and LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
-        --TODO: show dialog with info that selling is not allowed
+        LimitedDailyIncome:showErrorDialog("LIMIT_REACHED_FRUIT")
         return
     end
 

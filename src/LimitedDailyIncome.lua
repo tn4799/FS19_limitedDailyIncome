@@ -46,6 +46,13 @@ function LimitedDailyIncome:loadMapFinished(node, arguments, callAsyncCallback)
         end
     end
 
+    vehicleTypes = g_placeableTypeManager:getTypes()
+    for _, placeableType in pairs(vehicleTypes) do
+        if SpecializationUtil.hasSpecialization(PlaceableTrainSystem, placeableType.specializations) then
+            SpecializationUtil.registerOverwrittenFunction(placeableType, "onSellGoodsQuestion", LimitedDailyIncome.onSellGoodsQuestion)
+        end
+    end
+
     local screenClass = g_gui.nameScreenTypes["ConstructionScreen"]
     local screenElement = g_gui.screens[screenClass]
 
@@ -317,6 +324,17 @@ function LimitedDailyIncome:handleDischarge(superFunc, dischargeNode, discharged
 			self:setDischargeState(Dischargeable.DISCHARGE_STATE_OFF)
 		end
     end
+end
+
+function LimitedDailyIncome:onSellGoodsQuestion(superFunc, yes)
+    local farmId = self.spec_trainSystem.rentFarmId
+
+    if yes and farmId ~= g_farmManager.SPECTATOR_FARM_ID and LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
+        --TODO: show dialog with info that selling is not allowed
+        return
+    end
+
+    superFunc(self, yes)
 end
 
 function LimitedDailyIncome:draw()

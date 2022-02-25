@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
-<modDesc descVersion="63">
+<modDesc descVersion="64">
     <author>tn4799, Tensuko</author>
     <version>1.0.0.0</version>
     <title>
@@ -13,7 +13,6 @@
 This mod allows you to limit the income for all farms to a certain daily limit.
 
 What exactly can this mod do?
-
 - Set a limit per day
 - An increase of the limit if a farm has earned no money at all on a day
 - A smaller increase of the limit, if a farm has earned only little money on a day
@@ -22,15 +21,13 @@ What exactly can this mod do?
 IMPORTANT: All increased limits will be reset to the default limit as soon as you have earned a lot of money on a day!
 
 What counts as income?
-
 - Reward for missions
-	Selling crops, bales and animal products
-	Selling products
-	Selling wood
-	Selling animals
+- Selling crops, bales and animal products
+- Selling products
+- Selling wood
+- Selling animals
 
 What can I not do once I reach my limit ?
-
 - Accept any missions on that day
 - Nell crops, bales or animal products
 - Sell wood
@@ -53,7 +50,6 @@ by increasing the limit, with no or little profit, it is possible for players wi
 		<de><![CDATA[Mit dieser Mod lässt sich das Einkommen für alle Farmen auf ein bestimmtes Tageslimit begrenzen.
 
 Was genau kann die Mod?
-
 - Ein Limit pro Tag setzen.
 - Eine Erhöhung des Limits, wenn eine Farm an einem Tag gar kein Geld verdient hat.
 - Eine kleinere Erhöhung des Limits, wenn eine Farm an einem Tag nur wenig Geld verdient hat.
@@ -62,7 +58,6 @@ Was genau kann die Mod?
 WICHTIG: Alle erhöhten Limits werden wieder auf das Standardlimit zurückgesetzt sobald man an einem Tag wieder viel Geld verdient hat!
 
 Was zählt zu den Einnahmen?
-
 - Entlohnung von Missionen.
 - Verkauf von Ernte, Ballen und Tierprodukten
 - Verkauf von hergestellten Produkten
@@ -70,7 +65,6 @@ Was zählt zu den Einnahmen?
 - Verkauf von Tieren.
 
 Was kann ich nicht mehr machen, wenn ich mein Limit erreicht habe?
-
 - Keine Missionen mehr an diesem Tag annehmen.
 - Keine Ernte, Ballen oder Tierprodukte verkaufen.
 - Kein Holz verkaufen.

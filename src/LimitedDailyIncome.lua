@@ -269,7 +269,7 @@ end
 
 function LimitedDailyIncome:processWood(superFunc, farmId, noEventSend)
     local farmIdOwnerUnloadingStation = self.target:getTarget():getOwnerFarmId()
-    if farmId ~= farmIdOwnerUnloadingStation and LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
+    if farmIdOwnerUnloadingStation == g_farmManager.SPECTATOR_FARM_ID and self:getWoodLogs() ~= nil and LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
         LimitedDailyIncome:showErrorDialog("LIMIT_REACHED_WOOD")
         return
     end

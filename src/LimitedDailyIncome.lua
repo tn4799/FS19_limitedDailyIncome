@@ -240,7 +240,7 @@ function LimitedDailyIncome:startMission(superFunc, mission, farmId, spawnVehicl
         return
     end
 
-    superFunc(mission, farmId, spawnVehicles)
+    superFunc(self, mission, farmId, spawnVehicles)
 end
 
 -- disable making money with selling animals through trailer

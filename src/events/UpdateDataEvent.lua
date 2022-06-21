@@ -3,11 +3,11 @@ UpdateDataEvent_mt = Class(UpdateDataEvent, Event)
 
 InitEventClass(UpdateDataEvent, "UpdateDataEvent")
 
-function UpdateDataEvent:emptyNew()
-    return Event:new(UpdateDataEvent_mt)
+function UpdateDataEvent.emptyNew()
+    return Event.new(UpdateDataEvent_mt)
 end
 
-function UpdateDataEvent:new(farmId, sales, salesLimit)
+function UpdateDataEvent.new(farmId, sales, salesLimit)
     local self = UpdateDataEvent:emptyNew()
 
     self.farmId = farmId

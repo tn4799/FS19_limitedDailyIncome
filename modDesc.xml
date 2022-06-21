@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
-<modDesc descVersion="53">
+<modDesc descVersion="66">
     <author>tn4799, Tensuko</author>
-    <version>1.0.0.0</version>
+    <version>1.0.0.1</version>
     <title>
         <en>Limited Daily Income</en>
         <de>Tägliche Einkommensbegrenzung</de>
@@ -13,7 +13,6 @@
 This mod allows you to limit the income for all farms to a certain daily limit.
 
 What exactly can this mod do?
-
 - Set a limit per day
 - An increase of the limit if a farm has earned no money at all on a day
 - A smaller increase of the limit, if a farm has earned only little money on a day
@@ -22,18 +21,18 @@ What exactly can this mod do?
 IMPORTANT: All increased limits will be reset to the default limit as soon as you have earned a lot of money on a day!
 
 What counts as income?
-
 - Reward for missions
 - Selling crops, bales and animal products
+- Selling products
 - Selling wood
 - Selling animals
 
 What can I not do once I reach my limit ?
-
 - Accept any missions on that day
 - Nell crops, bales or animal products
 - Sell wood
 - Sell animals, although it's still possible to sell animals, but not for profit
+- The direct selling at production points is disabled once the limit is reached.
 
 Can I still sell vehicles and equipment and trade with other players ?
 
@@ -48,43 +47,42 @@ Others have only time to play 2-3 times a week, basicly not much time.
 Due to the limit, players with a lot of time are slowed down in their financial advancement and 
 by increasing the limit, with no or little profit, it is possible for players with less time to catch up with the other players.
 
-If you run into any kind of trouble or have an idea for new features please post then at https://github.com/tn4799/FS19_limitedDailyIncome/issues.
-Also if you post any issues also please send your log.txt file too.
-]]>
+For support and enhancement requests please open an issue over on <a href="https://github.com/tn4799/FS19_limitedDailyIncome/issues">Github</a>.
+
+Changelog:
+v1.0.0.1
+Fixed Bug when accepting Missions]]>
         </en>
-		<de>
-<![CDATA[
-Mit dieser Mod lässt sich das Einkommen für alle Farmen auf ein bestimmtes Tageslimit begrenzen.
+		<de><![CDATA[Mit dieser Mod lässt sich das Einkommen für alle Farmen auf ein bestimmtes Tageslimit begrenzen.
 
 Was genau kann die Mod?
-
-- Ein Limit pro Tag setzen
-- Eine Erhöhung des Limits, wenn eine Farm an einem Tag gar kein Geld verdient hat
-- Eine kleinere Erhöhung des Limits, wenn eine Farm an einem Tag nur wenig Geld verdient hat
+- Ein Limit pro Tag setzen.
+- Eine Erhöhung des Limits, wenn eine Farm an einem Tag gar kein Geld verdient hat.
+- Eine kleinere Erhöhung des Limits, wenn eine Farm an einem Tag nur wenig Geld verdient hat.
 - Die Limits für die einzelnen Farms sind in der farms.xml des Savegames gespeichert.
-- Alle Zuücksetzungswerte sind in der DailyLimitIncome.xml Datei im Savegame einstellbar.
+- Alle Zurücksetzungswerte sind in der DailyLimitIncome.xml Datei im Savegame einstellbar.
 WICHTIG: Alle erhöhten Limits werden wieder auf das Standardlimit zurückgesetzt sobald man an einem Tag wieder viel Geld verdient hat!
 
 Was zählt zu den Einnahmen?
-
-- Entlohnung von Missionen
+- Entlohnung von Missionen.
 - Verkauf von Ernte, Ballen und Tierprodukten
-- Verkauf von Holz
-- Verkauf von Tieren
+- Verkauf von hergestellten Produkten
+- Verkauf von Holz.
+- Verkauf von Tieren.
 
-Was kann ich nicht mehr machen, wenn ich mein Limit erreicht habe ?
+Was kann ich nicht mehr machen, wenn ich mein Limit erreicht habe?
+- Keine Missionen mehr an diesem Tag annehmen.
+- Keine Ernte, Ballen oder Tierprodukte verkaufen.
+- Kein Holz verkaufen.
+- Keine Tiere verkaufen, wobei es weiterhin möglich ist Tiere zu verkaufen, aber nicht gewinnbringend.
+- Der Direktverkauf von Produktionen wird deaktiviert wenn das Limit erreicht wird.
 
-- Keine Missionen mehr an diesem Tag annehmen
-- Keine Ernte, Ballen oder Tierprodukte verkaufen
-- Kein Holz verkaufen
-- Keine Tiere verkaufen, wobei es weiterhin möglich ist Tiere zu verkaufen, aber nicht gewinnbringend
-
-Kann ich weiterhin Fahrzeuge und Geräte verkaufen und mit anderen Spielern handeln ?
+Kann ich weiterhin Fahrzeuge und Geräte verkaufen und mit anderen Spielern handeln?
 
 Ja! Der Verkauf eines Gerätes oder Traktors stellt keine Kapitalerhöhung dar.
 Wenn ein Spieler dir Geld gibt, ist das seine Entscheidung dich weiter vorran zu bringen.
 
-Ok, aber was ist der Zweck dieser Mod ?
+Ok, aber was ist der Zweck dieser Mod?
 
 Man stellt sich vor, man hat einen 24/7 Server, auf dem Spieler ihre Farmen betreiben.
 Manche Spieler haben viel Zeit und kommen auf der Map entsprechend schnell vorran.
@@ -92,10 +90,11 @@ Andere haben nur 2-3 mal in der Woche Zeit, sprich wenig Zeit.
 Durch das Limit werden Spieler mit viel Zeit in ihrem finanziellem Vorranschreiten ausgebremst und 
 durch die Erhöhung des Limits, bei gar keinem oder wenig Gewinn ist es für Spieler mit weniger Zeit möglich, zu den anderen Spielern aufzuholen.
 
-Bei Problemen oder Anregungen bitte unter https://github.com/tn4799/FS19_limitedDailyIncome/issues melden.
-Wenn du ein Problem posten willst, lade bitte die log.txt hoch.
-]]>
-		</de>
+Für Supportanfragen und Verbesserungsvorschläge meldet euch bitte auf <a href="https://github.com/tn4799/FS19_limitedDailyIncome/issues">Github</a> mit einem Issue.
+
+Changelog:
+v1.0.0.1
+Bug beim Akzeptieren von Missionen behoben]]></de>
     </description>
     <iconFilename>modIcon.dds</iconFilename>
     <multiplayer supported="true"/>

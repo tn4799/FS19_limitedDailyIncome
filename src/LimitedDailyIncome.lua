@@ -417,6 +417,11 @@ function LimitedDailyIncome:createHUDComponents(hudAtlasPath, gameInfoDisplay)
 
     gameInfoDisplay:addChild(backgroundElement)
     LimitedDailyIncome.backgroundElement = backgroundElement
+
+    -- move the side notifications below the LDI HUD
+    local sideNotifications = g_currentMission.hud.sideNotifications
+    local notiPosX, _ = sideNotifications:getPosition()
+    sideNotifications:setPosition(notiPosX, posY - 0.003)
 end
 
 function LimitedDailyIncome:createBox(hudAtlasPath, rightX, bottomY, gameInfoDisplay, withIcon)

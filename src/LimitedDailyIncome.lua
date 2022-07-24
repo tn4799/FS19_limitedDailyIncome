@@ -208,7 +208,7 @@ function LimitedDailyIncome:onFarmDeleted(farmId)
     LimitedDailyIncome.sales[farmId] = nil
     LimitedDailyIncome.salesLimit[farmId] = nil
 
-    if g_currentMission:getIsServer() then
+    if g_currentMission ~= nil and g_currentMission:getIsServer() then
         g_server:broadcastEvent(UpdateDataEvent.new(farmId, LimitedDailyIncome.sales[farmId], LimitedDailyIncome.salesLimit[farmId]))
     end
 end

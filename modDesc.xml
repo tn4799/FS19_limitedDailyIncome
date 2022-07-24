@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="66">
     <author>tn4799, Tensuko</author>
-    <version>1.0.0.1</version>
+    <version>1.0.0.2</version>
     <title>
         <en>Limited Daily Income</en>
         <de>Tägliche Einkommensbegrenzung</de>
@@ -51,7 +51,10 @@ For support and enhancement requests please open an issue over on <a href="https
 
 Changelog:
 v1.0.0.1
-Fixed Bug when accepting Missions]]>
+Fixed Bug when accepting Missions
+
+v1.0.0.2
+Fixed a Bug when exiting to the main menu]]>
         </en>
 		<de><![CDATA[Mit dieser Mod lässt sich das Einkommen für alle Farmen auf ein bestimmtes Tageslimit begrenzen.
 
@@ -94,7 +97,10 @@ Für Supportanfragen und Verbesserungsvorschläge meldet euch bitte auf <a href=
 
 Changelog:
 v1.0.0.1
-Bug beim Akzeptieren von Missionen behoben]]></de>
+Bug beim Akzeptieren von Missionen behoben
+
+v1.0.0.2
+Bug beim Verlassen des Savegames behoben]]></de>
     </description>
     <iconFilename>modIcon.dds</iconFilename>
     <multiplayer supported="true"/>

@@ -391,7 +391,8 @@ function LimitedDailyIncome:createHUDComponents(hudAtlasPath, gameInfoDisplay)
     local topRightX, topRightY = GameInfoDisplay.getBackgroundPosition(1)
     -- we want to position our HUD below the standard HUD. so we need to reduce the height of the topRight corner 2 times.
     -- the last value is to create a little gap between our hud and the giants hud
-	local bottomY = topRightY - 2*gameInfoDisplay:getHeight() - 0.003
+	local bottomY = topRightY - gameInfoDisplay:getHeight() -- - 2*gameInfoDisplay:getHeight() - 0.003
+    topRightX = topRightX - gameInfoDisplay:getVisibleWidth() - 0.02
     local marginWidth, marginHeight = gameInfoDisplay:scalePixelToScreenVector(GameInfoDisplay.SIZE.BOX_MARGIN)
 	local rightX, salesLimitBox = LimitedDailyIncome:createBox(hudAtlasPath, topRightX, bottomY, gameInfoDisplay, false)
     LimitedDailyIncome.salesLimitBox = salesLimitBox

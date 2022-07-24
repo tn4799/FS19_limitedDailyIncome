@@ -362,18 +362,18 @@ function LimitedDailyIncome:draw()
     local textOffX, textOffY = gameInfoDisplay:scalePixelToScreenVector(gameInfoDisplay.POSITION.MONEY_TEXT)
 
     local salesLimitBoxPosX, salesLimitBoxPosY = LimitedDailyIncome.salesLimitBox:getPosition()
-    local salesBoxPosX, salesBoxPosY = LimitedDailyIncome.salesBox:getPosition()
-    local salesLimitTextPositionX = salesLimitBoxPosX + LimitedDailyIncome.salesLimitBox:getWidth() + textOffX
-    local salesTextPositionX = salesBoxPosX + LimitedDailyIncome.salesBox:getWidth() + textOffX - 0.005
-    local textPositionY = salesBoxPosY + LimitedDailyIncome.salesBox:getHeight() * 0.5 - gameInfoDisplay.moneyTextSize * 0.5 + textOffY
+    local salesLimitTextPositionX = salesLimitBoxPosX + LimitedDailyIncome.salesLimitBox:getWidth() - textOffX
+    local textPositionYCenter = salesLimitBoxPosY + LimitedDailyIncome.salesLimitBox:getHeight() * 0.5 - gameInfoDisplay.moneyTextSize * 0.5 + textOffY
+    local salesLimitTextPositionY = textPositionYCenter - 3.5 * textOffY
+    local textPositionY = textPositionYCenter + 3.5 * textOffY
 
     if g_currentMission.player ~= nil then
 		local farmId = g_currentMission.player.farmId
         local salesLimitText = g_i18n:formatMoney(LimitedDailyIncome.salesLimit[farmId], 0, false, true)
         local salesText = g_i18n:formatMoney(LimitedDailyIncome.sales[farmId], 0, false, true)
 
-		renderText(salesLimitTextPositionX, textPositionY, gameInfoDisplay.moneyTextSize, salesLimitText)
-        renderText(salesTextPositionX, textPositionY, gameInfoDisplay.moneyTextSize, salesText)
+		renderText(salesLimitTextPositionX, salesLimitTextPositionY, gameInfoDisplay.moneyTextSize, salesLimitText)
+        renderText(salesLimitTextPositionX, textPositionY, gameInfoDisplay.moneyTextSize, salesText)
 	end
 
     LimitedDailyIncome.moneyIconOverlay:setUVs(GuiUtils.getUVs(GameInfoDisplay.UV.MONEY_ICON))
@@ -389,24 +389,13 @@ end
 
 function LimitedDailyIncome:createHUDComponents(hudAtlasPath, gameInfoDisplay)
     local topRightX, topRightY = GameInfoDisplay.getBackgroundPosition(1)
-    -- we want to position our HUD below the standard HUD. so we need to reduce the height of the topRight corner 2 times.
-    -- the last value is to create a little gap between our hud and the giants hud
-	local bottomY = topRightY - gameInfoDisplay:getHeight() -- - 2*gameInfoDisplay:getHeight() - 0.003
-    topRightX = topRightX - gameInfoDisplay:getVisibleWidth() - 0.02
+    local bottomY = topRightY - gameInfoDisplay:getHeight() 
+    topRightX = topRightX - gameInfoDisplay:getVisibleWidth() - 0.0125
     local marginWidth, marginHeight = gameInfoDisplay:scalePixelToScreenVector(GameInfoDisplay.SIZE.BOX_MARGIN)
-	local rightX, salesLimitBox = LimitedDailyIncome:createBox(hudAtlasPath, topRightX, bottomY, gameInfoDisplay, false)
+    local rightX, salesLimitBox = LimitedDailyIncome:createBox(hudAtlasPath, topRightX, bottomY, gameInfoDisplay, true)
     LimitedDailyIncome.salesLimitBox = salesLimitBox
-    local sepX = rightX - marginWidth
-    rightX, LimitedDailyIncome.salesBox = LimitedDailyIncome:createBox(hudAtlasPath, rightX - marginWidth, bottomY, gameInfoDisplay, true)
-    rightX = rightX - marginWidth
-    local centerY = bottomY + gameInfoDisplay:getHeight() * 0.5
-	local separator = gameInfoDisplay:createVerticalSeparator(hudAtlasPath, sepX, centerY)
-    LimitedDailyIncome.salesBox:addChild(separator)
-
-    local posX, posY = LimitedDailyIncome.salesBox:getPosition()
-    local widthBackground = -marginWidth 
-                    + LimitedDailyIncome.salesBox:getWidth() + marginWidth * 2
-                    + LimitedDailyIncome.salesLimitBox:getWidth() + marginWidth
+    local posX, posY = LimitedDailyIncome.salesLimitBox:getPosition()
+    local widthBackground = LimitedDailyIncome.salesLimitBox:getWidth() + marginWidth
 
     local backgroundOverlay = Overlay.new(g_baseUIFilename, posX, posY, widthBackground, gameInfoDisplay:getHeight())
     backgroundOverlay:setUVs(g_colorBgUVs)
@@ -414,15 +403,9 @@ function LimitedDailyIncome:createHUDComponents(hudAtlasPath, gameInfoDisplay)
 
     local backgroundElement = HUDElement.new(backgroundOverlay)
     backgroundElement:addChild(LimitedDailyIncome.salesLimitBox)
-    backgroundElement:addChild(LimitedDailyIncome.salesBox)
 
     gameInfoDisplay:addChild(backgroundElement)
     LimitedDailyIncome.backgroundElement = backgroundElement
-
-    -- move the side notifications below the LDI HUD
-    local sideNotifications = g_currentMission.hud.sideNotifications
-    local notiPosX, _ = sideNotifications:getPosition()
-    sideNotifications:setPosition(notiPosX, posY - 0.003)
 end
 
 function LimitedDailyIncome:createBox(hudAtlasPath, rightX, bottomY, gameInfoDisplay, withIcon)

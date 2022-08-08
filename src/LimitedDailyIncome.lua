@@ -30,6 +30,7 @@ LimitedDailyIncome.salesLimitBox = nil
 LimitedDailyIncome.salesBox = nil
 LimitedDailyIncome.moneyIconOverlay = nil
 LimitedDailyIncome.backgroundElement = nil
+LimitedDailyIncome.GAP_WIDTH = 20
 
 LimitedDailyIncome.backupSellingStationFillAllowed = SellingStation.getIsFillAllowedFromFarm
 
@@ -390,7 +391,7 @@ end
 function LimitedDailyIncome:createHUDComponents(hudAtlasPath, gameInfoDisplay)
     local topRightX, topRightY = GameInfoDisplay.getBackgroundPosition(1)
     local bottomY = topRightY - gameInfoDisplay:getHeight() 
-    topRightX = topRightX - gameInfoDisplay:getVisibleWidth() - 0.0125
+    topRightX = topRightX - gameInfoDisplay:getVisibleWidth() - gameInfoDisplay:scalePixelToScreenWidth(LimitedDailyIncome.GAP_WIDTH)
     local marginWidth, marginHeight = gameInfoDisplay:scalePixelToScreenVector(GameInfoDisplay.SIZE.BOX_MARGIN)
     local rightX, salesLimitBox = LimitedDailyIncome:createBox(hudAtlasPath, topRightX, bottomY, gameInfoDisplay, true)
     LimitedDailyIncome.salesLimitBox = salesLimitBox

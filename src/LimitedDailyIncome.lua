@@ -216,7 +216,7 @@ end
 
 -- keep track of earned money to measure the total amount
 function LimitedDailyIncome:addMoney(amount, farmId, moneyType, addChange, forceShowChange)
-    if amount > 0 and not LimitedDailyIncome:isMoneyTypeAllowed(moneyType) then
+    if amount > 0 and moneyType == MoneyType.MISSIONS then
         LimitedDailyIncome.sales[farmId] = LimitedDailyIncome.sales[farmId] + amount
 
         if g_currentMission:getIsServer() then
@@ -354,7 +354,15 @@ function LimitedDailyIncome:draw()
         return
     end
 
+    -- update box possition adjusted to gameInfoDisplayWidth
+    local topRightX, topRightY = GameInfoDisplay.getBackgroundPosition(1)
+    local bottomY = topRightY - gameInfoDisplay:getHeight()
+    topRightX = topRightX - gameInfoDisplay:getVisibleWidth() - gameInfoDisplay:scalePixelToScreenWidth(LimitedDailyIncome.GAP_WIDTH)
+    local posX = topRightX - LimitedDailyIncome.salesLimitBox:getWidth()
+    LimitedDailyIncome.backgroundElement:setPosition(posX, bottomY)
+
     LimitedDailyIncome.backgroundElement:setVisible(true)
+
 
     setTextBold(false)
 	setTextAlignment(RenderText.ALIGN_RIGHT)
@@ -390,7 +398,7 @@ end
 
 function LimitedDailyIncome:createHUDComponents(hudAtlasPath, gameInfoDisplay)
     local topRightX, topRightY = GameInfoDisplay.getBackgroundPosition(1)
-    local bottomY = topRightY - gameInfoDisplay:getHeight() 
+    local bottomY = topRightY - gameInfoDisplay:getHeight()
     topRightX = topRightX - gameInfoDisplay:getVisibleWidth() - gameInfoDisplay:scalePixelToScreenWidth(LimitedDailyIncome.GAP_WIDTH)
     local marginWidth, marginHeight = gameInfoDisplay:scalePixelToScreenVector(GameInfoDisplay.SIZE.BOX_MARGIN)
     local rightX, salesLimitBox = LimitedDailyIncome:createBox(hudAtlasPath, topRightX, bottomY, gameInfoDisplay, true)
@@ -510,14 +518,14 @@ FarmManager.playerJoinedGame = Utils.appendedFunction(FarmManager.playerJoinedGa
 -- overwritten is used because we do some code injection. This means we insert some code at the start of the original function
 MissionManager.startMission = Utils.overwrittenFunction(MissionManager.startMission, LimitedDailyIncome.startMission)
 
-AnimalScreenDealerFarm.applyTarget = Utils.overwrittenFunction(AnimalScreenDealerFarm.applyTarget, LimitedDailyIncome.applyTargetFarms)
+--[[AnimalScreenDealerFarm.applyTarget = Utils.overwrittenFunction(AnimalScreenDealerFarm.applyTarget, LimitedDailyIncome.applyTargetFarms)
 AnimalScreenDealerTrailer.applyTarget = Utils.overwrittenFunction(AnimalScreenDealerTrailer.applyTarget, LimitedDailyIncome.applyTargetTrailer)
 
 SellingStation.getIsFillAllowedFromFarm = Utils.overwrittenFunction(SellingStation.getIsFillAllowedFromFarm, LimitedDailyIncome.getIsFillAllowedFromFarm)
 WoodUnloadTrigger.processWood = Utils.overwrittenFunction(WoodUnloadTrigger.processWood, LimitedDailyIncome.processWood)
 ProductionPoint.load = Utils.overwrittenFunction(ProductionPoint.load, LimitedDailyIncome.load)
 ProductionPoint.directlySellOutputs = Utils.overwrittenFunction(ProductionPoint.directlySellOutputs, LimitedDailyIncome.directlySellOutputs)
-
+]]
 ConstructionScreen.onOpen = Utils.appendedFunction(ConstructionScreen.onOpen, LimitedDailyIncome.onOpenConstructionScreen)
 ConstructionScreen.onClose = Utils.appendedFunction(ConstructionScreen.onClose, LimitedDailyIncome.onCloseConstructionScreen)
 

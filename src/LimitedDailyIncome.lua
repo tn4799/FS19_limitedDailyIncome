@@ -354,6 +354,13 @@ function LimitedDailyIncome:draw()
         return
     end
 
+    -- update box possition adjusted to gameInfoDisplayWidth
+    local topRightX, topRightY = GameInfoDisplay.getBackgroundPosition(1)
+    local bottomY = topRightY - gameInfoDisplay:getHeight()
+    topRightX = topRightX - gameInfoDisplay:getVisibleWidth() - gameInfoDisplay:scalePixelToScreenWidth(LimitedDailyIncome.GAP_WIDTH)
+    local posX = topRightX - LimitedDailyIncome.salesLimitBox:getWidth()
+    LimitedDailyIncome.backgroundElement:setPosition(posX, bottomY)
+
     LimitedDailyIncome.backgroundElement:setVisible(true)
 
     setTextBold(false)

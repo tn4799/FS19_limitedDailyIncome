@@ -306,7 +306,7 @@ end
 
 function LimitedDailyIncome:directlySellOutputs(superFunc)
     local farmId = self:getOwnerFarmId()
-    if farmId ~= g_farmManager.SPECTATOR_FARM_ID and LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
+    if farmId ~= g_farmManager.SPECTATOR_FARM_ID and farmId ~= AccessHandler.NOBODY and LimitedDailyIncome.sales[farmId] > LimitedDailyIncome.salesLimit[farmId] then
         return
     end
 
@@ -349,7 +349,7 @@ function LimitedDailyIncome:draw()
 
     local gameInfoDisplay = g_currentMission.hud.gameInfoDisplay
 
-    if g_currentMission.player ~= nil and g_currentMission.player.farmId == g_farmManager.SPECTATOR_FARM_ID then 
+    if g_currentMission.player ~= nil and g_currentMission.player.farmId == g_farmManager.SPECTATOR_FARM_ID then
         LimitedDailyIncome.backgroundElement:setVisible(false)
         return
     end
@@ -397,7 +397,7 @@ end
 
 function LimitedDailyIncome:createHUDComponents(hudAtlasPath, gameInfoDisplay)
     local topRightX, topRightY = GameInfoDisplay.getBackgroundPosition(1)
-    local bottomY = topRightY - gameInfoDisplay:getHeight() 
+    local bottomY = topRightY - gameInfoDisplay:getHeight()
     topRightX = topRightX - gameInfoDisplay:getVisibleWidth() - gameInfoDisplay:scalePixelToScreenWidth(LimitedDailyIncome.GAP_WIDTH)
     local marginWidth, marginHeight = gameInfoDisplay:scalePixelToScreenVector(GameInfoDisplay.SIZE.BOX_MARGIN)
     local rightX, salesLimitBox = LimitedDailyIncome:createBox(hudAtlasPath, topRightX, bottomY, gameInfoDisplay, true)
